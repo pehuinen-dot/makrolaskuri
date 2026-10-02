@@ -1,481 +1,330 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
 export default function Home() {
-  const [gender, setGender] = useState('male');
-  const [age, setAge] = useState('38');
-  const [height, setHeight] = useState('175');
-  const [weight, setWeight] = useState('90');
-  const [activity, setActivity] = useState('1.725');
-  const [goal, setGoal] = useState('-500');
-  const [diet, setDiet] = useState('omnivore');
+  const [gender, setGender] = useState<"male" | "female">("male");
+  const [age, setAge] = useState<number>(38);
+  const [height, setHeight] = useState<number>(175);
+  const [weight, setWeight] = useState<number>(90);
+  const [targetWeight, setTargetWeight] = useState<number>(82);
+  
+  const [activity, setActivity] = useState<number>(1.55);
+  const [diet, setDiet] = useState<string>("omnivore");
+  const [goalPreset, setGoalPreset] = useState<string>("-500");
+  const [customDeficit, setCustomDeficit] = useState<number>(-500);
 
-  const [result, setResult] = useState<any>(null);
+  const [results, setResults] = useState<any>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const calculateMacros = () => {
+    // 1. BMR (Mifflin-St Jeor)
+    let bmr = 10 * weight + 6.25 * height - 5 * age;
+    bmr += gender === "male" ? 5 : -161;
 
-    const a = parseFloat(age) || 0;
-    const h = parseFloat(height) || 0;
-    const w = parseFloat(weight) || 0;
-    const act = parseFloat(activity) || 1.2;
-    const g = parseFloat(goal) || 0;
+    // 2. TDEE (Kulutus)
+    const tdee = Math.round(bmr * activity);
 
-    if (!a || !h || !w) return;
-
-    let bmr = 10 * w + 6.25 * h - 5 * a;
-    bmr = gender === 'male' ? bmr + 5 : bmr - 161;
-
-    const tdee = bmr * act;
-    const targetCalories = Math.round(tdee + g);
-
-    let protein = Math.round(w * 2);
-    let fat = Math.round(w * 1);
-
-    if (diet === 'keto') {
-      fat = Math.round((targetCalories * 0.7) / 9);
-      protein = Math.round((targetCalories * 0.25) / 4);
+    // 3. Valittu kalorimuutos
+    let deficit = 0;
+    if (goalPreset === "custom") {
+      deficit = customDeficit;
+    } else {
+      deficit = parseInt(goalPreset, 10);
     }
 
-    const carbCalories = Math.max(0, targetCalories - (protein * 4 + fat * 9));
-    const carbs = Math.round(carbCalories / 4);
-    const fiber = Math.max(25, Math.round((targetCalories / 1000) * 14));
+    const targetCalories = Math.max(1200, tdee + deficit);
 
-    setResult({
-      calories: targetCalories,
-      protein,
-      carbs,
-      fat,
-      fiber,
-      diet,
-      weight,
-      goalText: goal === '-500' ? 'Rasvanpoltto' : goal === '300' ? 'Lihaskasvu' : 'Painon ylläpito'
+    // 4. Makrojen jako
+    // Proteiini: 2.0g / kg
+    const proteinGrams = Math.round(weight * 2.0);
+    const proteinKcal = proteinGrams * 4;
+
+    // Rasva: 25% kokonaiskaloreista (vähintään 0.8g/kg)
+    let fatKcal = targetCalories * 0.25;
+    let fatGrams = Math.round(fatKcal / 9);
+    if (fatGrams < weight * 0.8) {
+      fatGrams = Math.round(weight * 0.8);
+      fatKcal = fatGrams * 9;
+    }
+
+    // Hiilihydraatit: Loput kalorit
+    const carbKcal = Math.max(0, targetCalories - proteinKcal - fatKcal);
+    const carbGrams = Math.round(carbKcal / 4);
+
+    // Kuitu (14g / 1000 kcal)
+    const fiberGrams = Math.round((targetCalories / 1000) * 14);
+
+    // 5. Painoennusteen laskenta
+    const weightDiff = targetWeight - weight; // esim. 82 - 90 = -8 kg
+    let weeklyChange = 0;
+    let weeksToGoal = 0;
+    let targetDateStr = "";
+
+    if (deficit !== 0) {
+      // 1 kg rasvaa ≈ 7700 kcal
+      const dailyKcalChange = deficit;
+      const weeklyKcalChange = dailyKcalChange * 7;
+      weeklyChange = weeklyKcalChange / 7700; // kg/vko (miinus = pudotus, plus = lisäys)
+
+      if ((weightDiff < 0 && deficit < 0) || (weightDiff > 0 && deficit > 0)) {
+        weeksToGoal = Math.abs(Math.round(weightDiff / weeklyChange));
+        
+        const targetDate = new Date();
+        targetDate.setDate(targetDate.getDate() + weeksToGoal * 7);
+        targetDateStr = targetDate.toLocaleDateString("fi-FI", {
+          day: "numeric",
+          month: "numeric",
+          year: "numeric",
+        });
+      }
+    }
+
+    setResults({
+      bmr: Math.round(bmr),
+      tdee,
+      targetCalories,
+      deficit,
+      proteinGrams,
+      fatGrams,
+      carbGrams,
+      fiberGrams,
+      targetWeight,
+      weightDiff,
+      weeklyChange: weeklyChange.toFixed(2),
+      weeksToGoal,
+      targetDateStr,
     });
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
-
-  const getDetailedMeals = () => {
-    if (!result) return [];
-    const { protein, carbs } = result;
-
-    const pRatio = protein / 180;
-    const cRatio = carbs / 200;
-
-    const oatsGrams = Math.round(60 * cRatio);
-    const wheyGrams = 30;
-    const berriesGrams = 100;
-    const pähkinäGrams = 15;
-
-    const chickenGrams = Math.round(160 * pRatio);
-    const riceGrams = Math.round(70 * cRatio);
-    const vegGrams = 150;
-
-    const curdGrams = 200;
-    const appleGrams = 150;
-
-    const beefGrams = Math.round(160 * pRatio);
-    const potatoGrams = Math.round(250 * cRatio);
-    const oilGrams = 10;
-
-    return [
-      {
-        name: 'Aamupala',
-        items: [
-          { ingredient: `Kaurapuuro (${oatsGrams}g)`, p: Math.round(oatsGrams * 0.13), c: Math.round(oatsGrams * 0.6), f: Math.round(oatsGrams * 0.07), fiber: Math.round(oatsGrams * 0.1) },
-          { ingredient: `Hera/kasviproteiini (${wheyGrams}g)`, p: 24, c: 2, f: 2, fiber: 0 },
-          { ingredient: `Marjat (${berriesGrams}g)`, p: 1, c: 10, f: 0, fiber: 3 },
-          { ingredient: `Pähkinät (${pähkinäGrams}g)`, p: 3, c: 2, f: 9, fiber: 2 }
-        ]
-      },
-      {
-        name: 'Lounas',
-        items: [
-          { ingredient: `Kananrinta/Kala (${chickenGrams}g)`, p: Math.round(chickenGrams * 0.28), c: 0, f: Math.round(chickenGrams * 0.03), fiber: 0 },
-          { ingredient: `Riisi raaka (${riceGrams}g)`, p: Math.round(riceGrams * 0.07), c: Math.round(riceGrams * 0.78), f: 1, fiber: Math.round(riceGrams * 0.02) },
-          { ingredient: `Tuoresalaatti (${vegGrams}g)`, p: 2, c: 6, f: 0, fiber: 4 }
-        ]
-      },
-      {
-        name: 'Välipala',
-        items: [
-          { ingredient: `Maitorahka (${curdGrams}g)`, p: 22, c: 8, f: 1, fiber: 0 },
-          { ingredient: `Omena (${appleGrams}g)`, p: 0, c: 18, f: 0, fiber: 3 },
-          { ingredient: 'Chiansiemenet (10g)', p: 2, c: 1, f: 3, fiber: 4 }
-        ]
-      },
-      {
-        name: 'Illallinen',
-        items: [
-          { ingredient: `Jauheliha 10% (${beefGrams}g)`, p: Math.round(beefGrams * 0.26), c: 0, f: Math.round(beefGrams * 0.1), fiber: 0 },
-          { ingredient: `Peruna (${potatoGrams}g)`, p: Math.round(potatoGrams * 0.02), c: Math.round(potatoGrams * 0.17), f: 0, fiber: Math.round(potatoGrams * 0.018) },
-          { ingredient: `Oliiviöljy (${oilGrams}g)`, p: 0, c: 0, f: 10, fiber: 0 },
-          { ingredient: 'Uunikasvikset (150g)', p: 2, c: 8, f: 1, fiber: 4 }
-        ]
-      }
-    ];
-  };
-
-  const detailedMeals = getDetailedMeals();
-
   return (
-    <div className="main-container" style={{ backgroundColor: '#0f172a', color: '#f8fafc', minHeight: '100vh', padding: '16px', fontFamily: 'system-ui, -apple-system, sans-serif', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', boxSizing: 'border-box' }}>
-      
-      {/* RESPONSIVISUUS & PRINT CSS */}
-      <style jsx global>{`
-        /* MOBIILIKORJAUKSET */
-        @media (max-width: 640px) {
-          .main-container {
-            padding: 8px !important;
-          }
-          .print-wrapper {
-            padding: 12px !important;
-            border-radius: 12px !important;
-            max-width: 100% !important;
-            overflow: hidden !important;
-          }
-          .meal-grid {
-            grid-template-columns: 1fr !important;
-          }
-          .macro-grid {
-            grid-template-columns: repeat(2, 1fr) !important;
-          }
-          .table-container {
-            width: 100% !important;
-            overflow-x: auto !important;
-            -webkit-overflow-scrolling: touch;
-          }
-          .print-table {
-            min-width: 320px !important;
-          }
-          .print-table th, .print-table td {
-            padding: 6px 3px !important;
-            font-size: 0.72rem !important;
-          }
-        }
+    <main className="min-h-screen bg-slate-900 text-slate-100 p-4 md:p-8 flex flex-col items-center">
+      <div className="w-full max-w-2xl bg-slate-800 rounded-2xl p-6 border border-slate-700 shadow-xl">
+        <h1 className="text-2xl md:text-3xl font-bold text-emerald-400 mb-2 flex items-center gap-2">
+          ⚡ Makrolaskuri
+        </h1>
+        <p className="text-slate-400 text-sm mb-6">
+          Syötä tietosi ja laske henkilökohtaiset makrosi, painoennusteesi sekä ruokavaliosi.
+        </p>
 
-        /* PRINT CSS (A4 OPTIMOINTI) */
-        @media print {
-          @page {
-            size: A4 portrait;
-            margin: 8mm 10mm;
-          }
-          body, html {
-            background-color: #ffffff !important;
-            color: #0f172a !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            width: 100% !important;
-          }
-          .no-print {
-            display: none !important;
-          }
-          .print-wrapper {
-            background-color: #ffffff !important;
-            border: none !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            width: 100% !important;
-            max-width: 100% !important;
-            box-shadow: none !important;
-          }
-          .print-header {
-            display: flex !important;
-            justify-content: space-between !important;
-            align-items: center !important;
-            border-bottom: 2px solid #0f172a !important;
-            padding-bottom: 8px !important;
-            margin-bottom: 12px !important;
-          }
-          .print-grid {
-            display: grid !important;
-            grid-template-columns: repeat(4, 1fr) !important;
-            gap: 8px !important;
-          }
-          .print-card {
-            background-color: #f8fafc !important;
-            border: 1px solid #cbd5e1 !important;
-            border-radius: 6px !important;
-            padding: 8px !important;
-            text-align: center !important;
-          }
-          .print-meal-card {
-            background-color: #f8fafc !important;
-            border: 1px solid #cbd5e1 !important;
-            color: #0f172a !important;
-            padding: 10px !important;
-          }
-          .print-meal-card * {
-            color: #0f172a !important;
-          }
-          .print-text-dark {
-            color: #0f172a !important;
-          }
-          
-          .page-break {
-            page-break-before: always !important;
-            break-before: page !important;
-            padding-top: 10px !important;
-          }
-
-          .print-section {
-            page-break-inside: avoid !important;
-          }
-
-          .print-table {
-            width: 100% !important;
-            border-collapse: collapse !important;
-            margin-top: 4px !important;
-          }
-          .print-table th {
-            background-color: #f1f5f9 !important;
-            color: #0f172a !important;
-            padding: 5px 8px !important;
-            text-align: left !important;
-            border-bottom: 2px solid #cbd5e1 !important;
-            font-size: 0.8rem !important;
-          }
-          .print-table td {
-            padding: 5px 8px !important;
-            border-bottom: 1px solid #e2e8f0 !important;
-            color: #334155 !important;
-            font-size: 0.8rem !important;
-          }
-          .print-table tfoot td {
-            background-color: #f8fafc !important;
-            border-top: 2px solid #0f172a !important;
-            font-weight: bold !important;
-            color: #0f172a !important;
-          }
-          .print-footer {
-            display: block !important;
-            margin-top: 16px !important;
-            padding-top: 8px !important;
-            border-top: 1px solid #cbd5e1 !important;
-            font-size: 0.75rem !important;
-            color: #64748b !important;
-            text-align: center !important;
-          }
-        }
-      `}</style>
-
-      <div className="print-wrapper" style={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '16px', padding: '24px', maxWidth: '650px', width: '100%', boxSizing: 'border-box' }}>
-        
-        {/* SIVU 1: OTSIKKO TULOSTEESSA */}
-        <div className="print-header" style={{ display: 'none' }}>
+        {/* LOMAKE */}
+        <div className="space-y-4">
+          {/* Sukupuoli */}
           <div>
-            <h1 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 'bold', color: '#0f172a' }}>⚡ MAKRO- JA RAVINTORAPORTTI</h1>
-            <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: '#64748b' }}>Henkilökohtainen ravitsemussuunnitelma (Sivu 1/2)</p>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+              Sukupuoli
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setGender("male")}
+                className={`py-2.5 rounded-lg font-medium transition ${
+                  gender === "male"
+                    ? "bg-emerald-500 text-slate-950 font-bold"
+                    : "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                }`}
+              >
+                Mies
+              </button>
+              <button
+                type="button"
+                onClick={() => setGender("female")}
+                className={`py-2.5 rounded-lg font-medium transition ${
+                  gender === "female"
+                    ? "bg-emerald-500 text-slate-950 font-bold"
+                    : "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                }`}
+              >
+                Nainen
+              </button>
+            </div>
           </div>
-          <div style={{ textAlign: 'right', fontSize: '0.75rem', color: '#64748b' }}>
-            Päiväys: {new Date().toLocaleDateString('fi-FI')}<br />
-            Tavoite: {result?.goalText}
+
+          {/* Ikä, Pituus, Nykyinen Paino, Tavoitepaino */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div>
+              <label className="block text-xs text-slate-400 mb-1">Ikä</label>
+              <input
+                type="number"
+                value={age}
+                onChange={(e) => setAge(Number(e.target.value))}
+                className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-emerald-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-slate-400 mb-1">Pituus (cm)</label>
+              <input
+                type="number"
+                value={height}
+                onChange={(e) => setHeight(Number(e.target.value))}
+                className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-emerald-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-slate-400 mb-1">Paino (kg)</label>
+              <input
+                type="number"
+                value={weight}
+                onChange={(e) => setWeight(Number(e.target.value))}
+                className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-emerald-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-emerald-400 font-medium mb-1">Tavoitepaino (kg)</label>
+              <input
+                type="number"
+                value={targetWeight}
+                onChange={(e) => setTargetWeight(Number(e.target.value))}
+                className="w-full bg-slate-900 border border-emerald-500/50 rounded-lg p-2.5 text-white focus:outline-none focus:border-emerald-500"
+              />
+            </div>
           </div>
+
+          {/* Aktiivisuustaso */}
+          <div>
+            <label className="block text-xs text-slate-400 mb-1">Aktiivisuustaso</label>
+            <select
+              value={activity}
+              onChange={(e) => setActivity(Number(e.target.value))}
+              className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-emerald-500"
+            >
+              <option value={1.2}>Kevyt (Istumatyö, ei treeniä)</option>
+              <option value={1.375}>Kevyesti aktiivinen (Treeni 1-3 kertaa/vko)</option>
+              <option value={1.55}>Keskiraskas (Treeni 3-5 kertaa/vko)</option>
+              <option value={1.725}>Aktiivinen (Raskas treeni 6-7 kertaa/vko)</option>
+              <option value={1.9}>Erittäin aktiivinen (Urheilija / fyysinen työ)</option>
+            </select>
+          </div>
+
+          {/* Tavoite / Kalorivaje */}
+          <div>
+            <label className="block text-xs text-slate-400 mb-1">Tavoite & Kalorimuutos</label>
+            <select
+              value={goalPreset}
+              onChange={(e) => setGoalPreset(e.target.value)}
+              className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-emerald-500"
+            >
+              <option value="-1000">Tehodietti (-1000 kcal / pvä)</option>
+              <option value="-750">Kireä rasvanpoltto (-750 kcal / pvä)</option>
+              <option value="-500">Standardi rasvanpoltto (-500 kcal / pvä)</option>
+              <option value="-300">Maltillinen rasvanpoltto (-300 kcal / pvä)</option>
+              <option value="-200">Kevyt vaje (-200 kcal / pvä)</option>
+              <option value="0">Painon ylläpito (0 kcal)</option>
+              <option value="250">Maltillinen lihaskasvu (+250 kcal / pvä)</option>
+              <option value="500">Reipas massakausi (+500 kcal / pvä)</option>
+              <option value="custom">⚙️ Oma valinta (-1000 ... +1000 kcal)</option>
+            </select>
+          </div>
+
+          {/* Jos valittu 'custom', näytetään liukukytkin/syöte */}
+          {goalPreset === "custom" && (
+            <div className="p-3 bg-slate-900/80 rounded-lg border border-slate-700">
+              <div className="flex justify-between text-xs mb-1">
+                <span>Aseta oma vaje/ylijäämä:</span>
+                <span className="font-bold text-emerald-400">
+                  {customDeficit > 0 ? `+${customDeficit}` : customDeficit} kcal/pvä
+                </span>
+              </div>
+              <input
+                type="range"
+                min="-1000"
+                max="1000"
+                step="50"
+                value={customDeficit}
+                onChange={(e) => setCustomDeficit(Number(e.target.value))}
+                className="w-full accent-emerald-500 cursor-pointer"
+              />
+            </div>
+          )}
+
+          {/* Ruokavalio */}
+          <div>
+            <label className="block text-xs text-slate-400 mb-1">Ruokavalio</label>
+            <select
+              value={diet}
+              onChange={(e) => setDiet(e.target.value)}
+              className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-emerald-500"
+            >
+              <option value="omnivore">Sekasyöjä (Kaikki käy)</option>
+              <option value="veggie">Kasvissyöjä (Lacto-Ovo)</option>
+              <option value="vegan">Vegaani</option>
+            </select>
+          </div>
+
+          <button
+            onClick={calculateMacros}
+            className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3.5 rounded-xl transition shadow-lg mt-2"
+          >
+            Laske makrot & ennuste
+          </button>
         </div>
 
-        {/* LOMAKE (Piilotetaan tulostettaessa) */}
-        <div className="no-print">
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '8px', color: '#10b981' }}>⚡ Makrolaskuri</h1>
-          <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '24px' }}>Syötä tietosi ja laske henkilökohtaiset makrosi & ruokavaliosi.</p>
-
-          <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '8px', color: '#cbd5e1' }}>Sukupuoli</label>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button
-                  type="button"
-                  onClick={() => setGender('male')}
-                  style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #334155', backgroundColor: gender === 'male' ? '#10b981' : '#0f172a', color: gender === 'male' ? '#000' : '#fff', fontWeight: 'bold', cursor: 'pointer' }}
-                >
-                  Mies
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setGender('female')}
-                  style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #334155', backgroundColor: gender === 'female' ? '#10b981' : '#0f172a', color: gender === 'female' ? '#000' : '#fff', fontWeight: 'bold', cursor: 'pointer' }}
-                >
-                  Nainen
-                </button>
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '16px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '4px' }}>Ikä</label>
-                <input type="number" value={age} onChange={(e) => setAge(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #334155', backgroundColor: '#0f172a', color: '#fff', boxSizing: 'border-box' }} />
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '4px' }}>Pituus (cm)</label>
-                <input type="number" value={height} onChange={(e) => setHeight(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #334155', backgroundColor: '#0f172a', color: '#fff', boxSizing: 'border-box' }} />
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '4px' }}>Paino (kg)</label>
-                <input type="number" value={weight} onChange={(e) => setWeight(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #334155', backgroundColor: '#0f172a', color: '#fff', boxSizing: 'border-box' }} />
-              </div>
-            </div>
-
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px', color: '#cbd5e1' }}>Ruokavalio</label>
-              <select value={diet} onChange={(e) => setDiet(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #334155', backgroundColor: '#0f172a', color: '#fff' }}>
-                <option value="omnivore">Sekasyöjä (Kaikki käy)</option>
-                <option value="vegetarian">Kasvisruokavalio (Lakto-ovo)</option>
-                <option value="vegan">Vegaani (Täysin kasvispohjainen)</option>
-                <option value="keto">Ketogeeninen (Erittäin vähähiilihydraattinen)</option>
-              </select>
-            </div>
-
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px', color: '#cbd5e1' }}>Aktiivisuustaso</label>
-              <select value={activity} onChange={(e) => setActivity(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #334155', backgroundColor: '#0f172a', color: '#fff' }}>
-                <option value="1.2">Kevyt (Istumatyö, ei treeniä)</option>
-                <option value="1.375">Kohtalainen (Treeni 1-3 krt/vko)</option>
-                <option value="1.55">Aktiivinen (Treeni 3-5 krt/vko)</option>
-                <option value="1.725">Erittäin aktiivinen (Raskas treeni 6-7 krt/vko)</option>
-              </select>
-            </div>
-
-            <div style={{ marginBottom: '24px' }}>
-              <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px', color: '#cbd5e1' }}>Tavoite</label>
-              <select value={goal} onChange={(e) => setGoal(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #334155', backgroundColor: '#0f172a', color: '#fff' }}>
-                <option value="-500">Rasvanpoltto (-500 kcal)</option>
-                <option value="0">Painon ylläpito</option>
-                <option value="300">Lihaskasvu (+300 kcal)</option>
-              </select>
-            </div>
-
-            <button type="submit" style={{ width: '100%', padding: '14px', borderRadius: '8px', border: 'none', backgroundColor: '#10b981', color: '#000', fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer' }}>
-              Laske makrot
-            </button>
-          </form>
-        </div>
-
-        {/* TULOKSET & RAPORTTI */}
-        {result && (
-          <div>
-            {/* SIVU 1 */}
-            <div className="print-section" style={{ marginTop: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                <h3 className="print-text-dark" style={{ margin: 0, fontSize: '1.1rem', color: '#10b981' }}>Päivittäinen tavoite:</h3>
-                <button className="no-print" onClick={handlePrint} style={{ backgroundColor: '#334155', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 'bold', cursor: 'pointer' }}>
-                  🖨️ Tulosta / Tallenna PDF
-                </button>
-              </div>
-
-              <div className="print-text-dark" style={{ fontSize: '2rem', fontWeight: '800', marginBottom: '16px' }}>
-                {result.calories} <span style={{ fontSize: '1rem', fontWeight: 'normal', color: '#94a3b8' }}>kcal / pv</span>
-              </div>
-
-              {/* Makroruudukko (Mobiilissa 2x2) */}
-              <div className="print-grid macro-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', textAlign: 'center', marginBottom: '20px' }}>
-                <div className="print-card" style={{ backgroundColor: '#0f172a', padding: '10px 4px', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '0.7rem', color: '#94a3b8', textTransform: 'uppercase' }}>Proteiini</div>
-                  <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#38bdf8', marginTop: '2px' }}>{result.protein}g</div>
-                </div>
-                <div className="print-card" style={{ backgroundColor: '#0f172a', padding: '10px 4px', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '0.7rem', color: '#94a3b8', textTransform: 'uppercase' }}>Hiilihydraatti</div>
-                  <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#facc15', marginTop: '2px' }}>{result.carbs}g</div>
-                </div>
-                <div className="print-card" style={{ backgroundColor: '#0f172a', padding: '10px 4px', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '0.7rem', color: '#94a3b8', textTransform: 'uppercase' }}>Rasva</div>
-                  <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#f43f5e', marginTop: '2px' }}>{result.fat}g</div>
-                </div>
-                <div className="print-card" style={{ backgroundColor: '#0f172a', padding: '10px 4px', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '0.7rem', color: '#94a3b8', textTransform: 'uppercase' }}>Kuidut</div>
-                  <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#a855f7', marginTop: '2px' }}>{result.fiber}g</div>
+        {/* TULOKSET */}
+        {results && (
+          <div className="mt-8 pt-6 border-t border-slate-700 space-y-6">
+            {/* ENNUSTEKORTTI */}
+            {results.weeksToGoal > 0 && (
+              <div className="bg-emerald-950/40 border border-emerald-500/40 rounded-xl p-4">
+                <h3 className="text-emerald-400 font-bold text-lg mb-1 flex items-center gap-2">
+                  📈 Ennuste tavoitteeseesi ({results.targetWeight} kg)
+                </h3>
+                <p className="text-slate-300 text-sm">
+                  Nykyisellä vajeella/ylijäämällä ({results.deficit} kcal/pvä) painosi muuttuu noin{" "}
+                  <strong className="text-white">{Math.abs(Number(results.weeklyChange))} kg / viikko</strong>.
+                </p>
+                <div className="mt-3 p-3 bg-slate-900/60 rounded-lg flex justify-between items-center text-sm">
+                  <span>Arvioitu kesto:</span>
+                  <span className="font-bold text-emerald-400 text-base">
+                    {results.weeksToGoal} viikkoa ({results.targetDateStr})
+                  </span>
                 </div>
               </div>
+            )}
 
-              {/* Yhteenveto aterioista */}
-              <div style={{ marginTop: '16px' }}>
-                <h4 className="print-text-dark" style={{ margin: '0 0 10px 0', fontSize: '1rem', color: '#10b981' }}>
-                  Ateriarakenne ja esimerkit ({result.calories} kcal)
-                </h4>
-                <div className="meal-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                  {detailedMeals.map((m, idx) => (
-                    <div key={idx} className="print-meal-card" style={{ backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '8px', padding: '10px' }}>
-                      <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#10b981', marginBottom: '2px' }}>{m.name}</div>
-                      <div style={{ fontSize: '0.8rem', color: '#cbd5e1', wordBreak: 'break-word' }}>
-                        {m.items.map(i => i.ingredient).join(', ')}
-                      </div>
-                    </div>
-                  ))}
+            {/* Kalorien yhteenveto */}
+            <div className="grid grid-cols-3 gap-3 text-center">
+              <div className="bg-slate-900 p-3 rounded-lg border border-slate-700">
+                <div className="text-xs text-slate-400">BMR (Lepo)</div>
+                <div className="text-lg font-bold">{results.bmr} kcal</div>
+              </div>
+              <div className="bg-slate-900 p-3 rounded-lg border border-slate-700">
+                <div className="text-xs text-slate-400">Kulutus (TDEE)</div>
+                <div className="text-lg font-bold">{results.tdee} kcal</div>
+              </div>
+              <div className="bg-emerald-900/40 p-3 rounded-lg border border-emerald-500/30">
+                <div className="text-xs text-emerald-300">Tavoitekalorit</div>
+                <div className="text-xl font-extrabold text-emerald-400">
+                  {results.targetCalories} kcal
                 </div>
               </div>
             </div>
 
-            {/* SIVU 2: TARKKA ERITTELY & ATERIATOTALIT */}
-            <div className="page-break print-section">
-              <div className="print-header" style={{ display: 'none' }}>
-                <div>
-                  <h1 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 'bold', color: '#0f172a' }}>⚡ MAKRO- JA RAVINTORAPORTTI</h1>
-                  <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: '#64748b' }}>Aterioiden ravintoaine-erittely (Sivu 2/2)</p>
+            {/* Makrot taulukko / kortit */}
+            <div>
+              <h4 className="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-3">
+                Päivittäiset makroravinteet
+              </h4>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="bg-slate-900 p-3 rounded-lg border border-slate-700 text-center">
+                  <div className="text-xs text-slate-400">Proteiini</div>
+                  <div className="text-xl font-bold text-blue-400">{results.proteinGrams} g</div>
+                </div>
+                <div className="bg-slate-900 p-3 rounded-lg border border-slate-700 text-center">
+                  <div className="text-xs text-slate-400">Rasva</div>
+                  <div className="text-xl font-bold text-amber-400">{results.fatGrams} g</div>
+                </div>
+                <div className="bg-slate-900 p-3 rounded-lg border border-slate-700 text-center">
+                  <div className="text-xs text-slate-400">Hiilihydraatti</div>
+                  <div className="text-xl font-bold text-emerald-400">{results.carbGrams} g</div>
+                </div>
+                <div className="bg-slate-900 p-3 rounded-lg border border-slate-700 text-center">
+                  <div className="text-xs text-slate-400">Kuitu (min)</div>
+                  <div className="text-xl font-bold text-purple-400">{results.fiberGrams} g</div>
                 </div>
               </div>
-
-              <h3 className="print-text-dark" style={{ fontSize: '1.1rem', color: '#10b981', marginBottom: '12px', marginTop: '24px' }}>
-                📊 Ateriakohtainen erittely
-              </h3>
-
-              {detailedMeals.map((meal, mIdx) => {
-                const totP = meal.items.reduce((sum, item) => sum + item.p, 0);
-                const totC = meal.items.reduce((sum, item) => sum + item.c, 0);
-                const totF = meal.items.reduce((sum, item) => sum + item.f, 0);
-                const totFiber = meal.items.reduce((sum, item) => sum + item.fiber, 0);
-
-                return (
-                  <div key={mIdx} style={{ marginBottom: '14px' }}>
-                    <h4 className="print-text-dark" style={{ margin: '0 0 4px 0', color: '#38bdf8', fontSize: '0.9rem' }}>
-                      {meal.name}
-                    </h4>
-                    <div className="table-container">
-                      <table className="print-table" style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: '#0f172a', borderRadius: '6px', overflow: 'hidden' }}>
-                        <thead>
-                          <tr style={{ backgroundColor: '#1e293b', textAlign: 'left', fontSize: '0.75rem', color: '#94a3b8' }}>
-                            <th style={{ padding: '6px 6px' }}>Raaka-aine</th>
-                            <th style={{ padding: '6px 4px', textAlign: 'center' }}>Prot</th>
-                            <th style={{ padding: '6px 4px', textAlign: 'center' }}>Hh</th>
-                            <th style={{ padding: '6px 4px', textAlign: 'center' }}>Rasva</th>
-                            <th style={{ padding: '6px 4px', textAlign: 'center' }}>Kuitu</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {meal.items.map((item, iIdx) => (
-                            <tr key={iIdx} style={{ borderBottom: '1px solid #334155', fontSize: '0.78rem', color: '#e2e8f0' }}>
-                              <td style={{ padding: '5px 6px', wordBreak: 'break-word' }}>{item.ingredient}</td>
-                              <td style={{ padding: '5px 4px', textAlign: 'center', color: '#38bdf8' }}>{item.p}</td>
-                              <td style={{ padding: '5px 4px', textAlign: 'center', color: '#facc15' }}>{item.c}</td>
-                              <td style={{ padding: '5px 4px', textAlign: 'center', color: '#f43f5e' }}>{item.f}</td>
-                              <td style={{ padding: '5px 4px', textAlign: 'center', color: '#a855f7' }}>{item.fiber}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                        <tfoot>
-                          <tr style={{ backgroundColor: '#1e293b', fontWeight: 'bold', fontSize: '0.78rem' }}>
-                            <td style={{ padding: '6px 6px', color: '#10b981' }}>YHTEENSÄ</td>
-                            <td style={{ padding: '6px 4px', textAlign: 'center', color: '#38bdf8' }}>{totP}g</td>
-                            <td style={{ padding: '6px 4px', textAlign: 'center', color: '#facc15' }}>{totC}g</td>
-                            <td style={{ padding: '6px 4px', textAlign: 'center', color: '#f43f5e' }}>{totF}g</td>
-                            <td style={{ padding: '6px 4px', textAlign: 'center', color: '#a855f7' }}>{totFiber}g</td>
-                          </tr>
-                        </tfoot>
-                      </table>
-                    </div>
-                  </div>
-                );
-              })}
-
-              <div className="print-footer" style={{ display: 'none' }}>
-                Tämä raportti on generoitu automaattisesti. Arvot ovat suuntaa-antavia arvioita laadukkaista ravinnonlähteistä.
-              </div>
             </div>
-
           </div>
         )}
-
       </div>
-    </div>
+    </main>
   );
 }
