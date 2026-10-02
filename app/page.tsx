@@ -117,7 +117,7 @@ export default function Home() {
           ],
         },
         lunch: {
-          name: "Kiinteä tofu -riisikulho & vihannekset",
+          name: "Tofu-riisikulho & vihannekset",
           ingredients: [
             "180g kiinteää tofua marinoituna",
             "80g tummaa riisiä (kuivapaino)",
