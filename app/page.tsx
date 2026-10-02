@@ -9,10 +9,12 @@ type Meal = {
 
 export default function Home() {
   const [gender, setGender] = useState<"male" | "female">("male");
-  const [age, setAge] = useState<number>(38);
-  const [height, setHeight] = useState<number>(175);
-  const [weight, setWeight] = useState<number>(90);
-  const [targetWeight, setTargetWeight] = useState<number>(82);
+  
+  // Käytetään merkkijonoja (string) tateissa, jotta kentän voi tyhjentää ilman nollan jäämistä
+  const [age, setAge] = useState<string>("38");
+  const [height, setHeight] = useState<string>("175");
+  const [weight, setWeight] = useState<string>("90");
+  const [targetWeight, setTargetWeight] = useState<string>("82");
   
   const [activity, setActivity] = useState<number>(1.55);
   const [diet, setDiet] = useState<string>("omnivore");
@@ -27,8 +29,16 @@ export default function Home() {
   const [results, setResults] = useState<any>(null);
 
   const calculateMacros = () => {
+    // Muutetaan numeroksi vasta laskentahetkellä
+    const numAge = Number(age) || 0;
+    const numHeight = Number(height) || 0;
+    const numWeight = Number(weight) || 0;
+    const numTargetWeight = Number(targetWeight) || 0;
+
+    if (!numWeight || !numHeight || !numAge) return;
+
     // 1. BMR (Mifflin-St Jeor)
-    let bmr = 10 * weight + 6.25 * height - 5 * age;
+    let bmr = 10 * numWeight + 6.25 * numHeight - 5 * numAge;
     bmr += gender === "male" ? 5 : -161;
 
     // 2. TDEE
@@ -48,13 +58,13 @@ export default function Home() {
       fatGrams = Math.round((targetCalories * 0.70) / 9);
       carbGrams = Math.round((targetCalories * 0.05) / 4);
     } else {
-      proteinGrams = Math.round(weight * 2.0);
+      proteinGrams = Math.round(numWeight * 2.0);
       const proteinKcal = proteinGrams * 4;
 
       let fatKcal = targetCalories * 0.25;
       fatGrams = Math.round(fatKcal / 9);
-      if (fatGrams < weight * 0.8) {
-        fatGrams = Math.round(weight * 0.8);
+      if (fatGrams < numWeight * 0.8) {
+        fatGrams = Math.round(numWeight * 0.8);
         fatKcal = fatGrams * 9;
       }
 
@@ -65,7 +75,7 @@ export default function Home() {
     const fiberGrams = Math.round((targetCalories / 1000) * 14);
 
     // 5. Painoennuste
-    const weightDiff = targetWeight - weight;
+    const weightDiff = numTargetWeight - numWeight;
     let weeklyChange = 0;
     let weeksToGoal = 0;
     let targetDateStr = "";
@@ -84,7 +94,7 @@ export default function Home() {
       }
     }
 
-    // Ateriamallit tarkkoine määrineen ruokavalion mukaan
+    // Ateriamallit
     let generatedMeals: { [key: string]: Meal } = {};
 
     if (diet === "keto") {
@@ -126,7 +136,6 @@ export default function Home() {
         },
       };
     } else {
-      // Sekasyöjä & Kasvissyöjä
       generatedMeals = {
         breakfast: {
           name: "Kaurapuuro proteiinilla & marjoilla",
@@ -158,7 +167,7 @@ export default function Home() {
       fatGrams,
       carbGrams,
       fiberGrams,
-      targetWeight,
+      targetWeight: numTargetWeight,
       weeklyChange: weeklyChange.toFixed(2),
       weeksToGoal,
       targetDateStr,
@@ -241,36 +250,40 @@ export default function Home() {
             <div>
               <label className="block text-xs text-slate-400 mb-1">Ikä</label>
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
                 value={age}
-                onChange={(e) => setAge(Number(e.target.value))}
+                onChange={(e) => setAge(e.target.value)}
                 className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-emerald-500"
               />
             </div>
             <div>
               <label className="block text-xs text-slate-400 mb-1">Pituus (cm)</label>
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
                 value={height}
-                onChange={(e) => setHeight(Number(e.target.value))}
+                onChange={(e) => setHeight(e.target.value)}
                 className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-emerald-500"
               />
             </div>
             <div>
               <label className="block text-xs text-slate-400 mb-1">Paino (kg)</label>
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
                 value={weight}
-                onChange={(e) => setWeight(Number(e.target.value))}
+                onChange={(e) => setWeight(e.target.value)}
                 className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-emerald-500"
               />
             </div>
             <div>
               <label className="block text-xs text-emerald-400 font-medium mb-1">Tavoitepaino (kg)</label>
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
                 value={targetWeight}
-                onChange={(e) => setTargetWeight(Number(e.target.value))}
+                onChange={(e) => setTargetWeight(e.target.value)}
                 className="w-full bg-slate-900 border border-emerald-500/50 rounded-lg p-2.5 text-white focus:outline-none focus:border-emerald-500"
               />
             </div>
@@ -487,7 +500,6 @@ export default function Home() {
                     ✓ Lähetetty osoitteeseen: {email}! Tarkista sähköpostisi.
                   </div>
                   
-                  {/* MARKKINOINTIVIESTI / CTA APPIIN */}
                   <div className="p-4 bg-slate-800 rounded-lg border border-slate-700 text-left">
                     <p className="text-xs font-bold text-amber-400 uppercase tracking-wider mb-1">
                       🔥 Haluatko lisää vaihtelua ja automaattisen seurannan?
