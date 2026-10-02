@@ -2,107 +2,10 @@
 
 import React, { useState } from "react";
 
-type Recipe = {
-  id: string;
+type Meal = {
   name: string;
-  category: "breakfast" | "lunch" | "dinner" | "snack";
-  diets: string[];
   ingredients: string[];
 };
-
-const RECIPE_BOOK: Recipe[] = [
-  // AAMUPALAT
-  {
-    id: "b1",
-    name: "Kaurapuuro proteiinilla & marjoilla",
-    category: "breakfast",
-    diets: ["omnivore", "veggie"],
-    ingredients: ["80g kaurahiutale", "30g heraproteiini / 150g raejuusto", "100g pakastemarjat", "15g pähkinät"],
-  },
-  {
-    id: "b2",
-    name: "Munamies-Munakas & Tumma leipä",
-    category: "breakfast",
-    diets: ["omnivore", "veggie"],
-    ingredients: ["3 kananmunaa", "2 viipaletta ruisleipää", "50g leiketta / juustoa", "Kurkkua & tomaattia"],
-  },
-  {
-    id: "b3",
-    name: "Keto-Eines: Pekoni-Munakas & Avokado",
-    category: "breakfast",
-    diets: ["keto", "omnivore"],
-    ingredients: ["3 kananmunaa", "4 viipaletta pekonia", "1 kpl avokado", "Pinaattia & oliiviöljyä"],
-  },
-  {
-    id: "b4",
-    name: "Vegaaninen Chian-siemenpuuro & Pähkinävoi",
-    category: "breakfast",
-    diets: ["vegan", "veggie"],
-    ingredients: ["3 rkl chian-siemeniä", "2 dl kasvimaitoa", "30g vegaaniproteiinia", "1 rkl pähkinävoita"],
-  },
-
-  // LOUNAT
-  {
-    id: "l1",
-    name: "Kana-Riisikulho & Kasvikset",
-    category: "lunch",
-    diets: ["omnivore"],
-    ingredients: ["180g broilerin rinta-filee", "70g (raakapaino) riisi / peruna", "150g kasviksia", "1 rkl oliiviöljyä"],
-  },
-  {
-    id: "l2",
-    name: "Jauheliha-Bataattilautanen",
-    category: "lunch",
-    diets: ["omnivore"],
-    ingredients: ["180g naudan jauheliha (10%)", "200g bataattia", "150g parsakaalia", "1/2 avokado"],
-  },
-  {
-    id: "l3",
-    name: "Keto-Lohisalaatti & Feta",
-    category: "lunch",
-    diets: ["keto", "omnivore"],
-    ingredients: ["200g uunilohta", "50g fetajuustoa", "2 rkl oliiviöljyä", "Runsas vihersalaatti"],
-  },
-  {
-    id: "l4",
-    name: "Tofu-Kastike & Tumma Riisi",
-    category: "lunch",
-    diets: ["vegan", "veggie"],
-    ingredients: ["200g tofu / nyhtökaura", "70g tumma riisi", "1 dl kevyt kookosmaito", "Wokkivihanneksia"],
-  },
-
-  // PÄIVÄLLISET
-  {
-    id: "d1",
-    name: "Uunilohi & Perunamuusi",
-    category: "dinner",
-    diets: ["omnivore"],
-    ingredients: ["180g uunilohta", "250g perunaa", "100g vihreitä papuja", "Tilli-kermaviilikastike"],
-  },
-  {
-    id: "d2",
-    name: "Nauta-Wokki & Nuudelit",
-    category: "dinner",
-    diets: ["omnivore"],
-    ingredients: ["180g naudan suikaleita", "60g täysjyvänuudelia", "200g wok-vihanneksia", "Soijakastike & seesamiöljy"],
-  },
-
-  // ILTAPALAT
-  {
-    id: "s1",
-    name: "Maitorahka / Vegerahka & Marjat",
-    category: "snack",
-    diets: ["omnivore", "veggie", "vegan"],
-    ingredients: ["250g maustamaton maitorahka / soijarahka", "150g pakastemarjoja", "20g pähkinöitä"],
-  },
-  {
-    id: "s2",
-    name: "Proteiinismoothie & Pähkinävoi",
-    category: "snack",
-    diets: ["omnivore", "veggie", "vegan"],
-    ingredients: ["30g heraproteiini / vegaaniproteiini", "1 kpl banaani", "2 dl maito / kasvimaito", "1 rkl pähkinävoi"],
-  }
-];
 
 export default function Home() {
   const [gender, setGender] = useState<"male" | "female">("male");
@@ -120,28 +23,22 @@ export default function Home() {
   const [emailSent, setEmailSent] = useState<boolean>(false);
   const [isSending, setIsSending] = useState<boolean>(false);
 
-  const [activeMeals, setActiveMeals] = useState<{ [key: string]: Recipe }>({});
+  const [meals, setMeals] = useState<{ [key: string]: Meal }>({});
   const [results, setResults] = useState<any>(null);
 
-  const getSuitableRecipe = (category: "breakfast" | "lunch" | "dinner" | "snack") => {
-    const suitable = RECIPE_BOOK.filter(
-      (r) => (r.category === category || (category === "dinner" && r.category === "lunch")) && r.diets.includes(diet)
-    );
-    if (suitable.length === 0) {
-      return RECIPE_BOOK.find((r) => r.category === "breakfast") || RECIPE_BOOK[0];
-    }
-    return suitable[Math.floor(Math.random() * suitable.length)];
-  };
-
   const calculateMacros = () => {
+    // 1. BMR (Mifflin-St Jeor)
     let bmr = 10 * weight + 6.25 * height - 5 * age;
     bmr += gender === "male" ? 5 : -161;
 
+    // 2. TDEE
     const tdee = Math.round(bmr * activity);
 
+    // 3. Kalorimuutos
     let deficit = goalPreset === "custom" ? customDeficit : parseInt(goalPreset, 10);
     const targetCalories = Math.max(1200, tdee + deficit);
 
+    // 4. Makrojen jako
     let proteinGrams = 0;
     let fatGrams = 0;
     let carbGrams = 0;
@@ -167,6 +64,7 @@ export default function Home() {
 
     const fiberGrams = Math.round((targetCalories / 1000) * 14);
 
+    // 5. Painoennuste
     const weightDiff = targetWeight - weight;
     let weeklyChange = 0;
     let weeksToGoal = 0;
@@ -186,14 +84,70 @@ export default function Home() {
       }
     }
 
-    const meals = {
-      breakfast: getSuitableRecipe("breakfast"),
-      lunch: getSuitableRecipe("lunch"),
-      dinner: getSuitableRecipe("dinner"),
-      snack: getSuitableRecipe("snack"),
-    };
+    // Ateriamallit tarkkoine määrineen ruokavalion mukaan
+    let generatedMeals: { [key: string]: Meal } = {};
 
-    setActiveMeals(meals);
+    if (diet === "keto") {
+      generatedMeals = {
+        breakfast: {
+          name: "Pekoni-munakas & avokado",
+          ingredients: ["3 kpl kananmunaa", "4 viipaletta pekonia", "1 kpl avokado (150g)", "1 rkl oliiviöljyä paistamiseen", "Kourallinen pinaattia"],
+        },
+        lunch: {
+          name: "Lohisalaatti & fetajuusto",
+          ingredients: ["200g uunilohta", "60g fetajuustoa", "2 rkl kylmäpuristettua oliiviöljyä", "150g vihersalaattia & kurkkua"],
+        },
+        dinner: {
+          name: "Jauhelihapihvit & parsaa voikastikkeessa",
+          ingredients: ["200g naudan jauhelihaa (20%)", "150g parsaa", "25g voita", "50g salaattia"],
+        },
+        snack: {
+          name: "Keto-välipala: Raejuusto & pähkinät",
+          ingredients: ["200g rasvaista raejuustoa (4%)", "30g saksanpähkinöitä", "1 rkl oliiviöljyä"],
+        },
+      };
+    } else if (diet === "vegan") {
+      generatedMeals = {
+        breakfast: {
+          name: "Chian-siemenpuuro & pähkinävoi",
+          ingredients: ["40g kaurahiutaleita", "2 rkl chian-siemeniä", "2.5 dl soijamaitoa", "30g vegaaniproteiinia", "1 rkl pähkinävoita", "100g marjoja"],
+        },
+        lunch: {
+          name: "Tofukastike & tumma riisi",
+          ingredients: ["200g maustamatonta tofua / nyhtökauraa", "70g (raakapaino) tummaa riisiä", "1 dl kevytkookosmaitoa", "150g wok-vihanneksia"],
+        },
+        dinner: {
+          name: "Linssikastike & peruna",
+          ingredients: ["1 dl keltaisia / punaisia linssejä", "250g kuorittua perunaa", "100g tomaattimurskaa", "1 rkl rypsiöljyä"],
+        },
+        snack: {
+          name: "Soijarahka & pähkinät",
+          ingredients: ["250g maustamatonta soijarahkaa", "150g pakastemustikoita", "20g manteleita"],
+        },
+      };
+    } else {
+      // Sekasyöjä & Kasvissyöjä
+      generatedMeals = {
+        breakfast: {
+          name: "Kaurapuuro proteiinilla & marjoilla",
+          ingredients: ["80g kaurahiutaleita", "30g heraproteiinia (tai 150g raejuustoa)", "100g pakastemarjoja", "15g pähkinöitä / siemeniä"],
+        },
+        lunch: {
+          name: "Kana-riisikulho & kasvikset",
+          ingredients: ["180g broilerin rinta-fileetä (tai Nyhtökauraa)", "70g (raakapaino) riisiä", "150g höyrytettyjä kasviksia", "1 rkl oliiviöljyä"],
+        },
+        dinner: {
+          name: "Uunilohi & perunat",
+          ingredients: ["180g uunilohta", "250g keitettyä perunaa", "150g salaattia / vihreitä papuja", "1 rkl kevytkermaviilikastiketta"],
+        },
+        snack: {
+          name: "Maitorahka & marjat",
+          ingredients: ["250g maustamatonta maitorahkaa (0.2%)", "150g pakastemustikoita / marjoja", "20g saksanpähkinöitä"],
+        },
+      };
+    }
+
+    setMeals(generatedMeals);
 
     setResults({
       bmr: Math.round(bmr),
@@ -224,7 +178,7 @@ export default function Home() {
         body: JSON.stringify({
           email,
           results,
-          activeMeals,
+          meals,
         }),
       });
 
@@ -463,54 +417,62 @@ export default function Home() {
               </div>
             </div>
 
-            {/* 1 PÄIVÄN VALMIS ATERIASUUNNITELMA */}
+            {/* 1 PÄIVÄN VALMIS ATERIASUUNNITELMA TARKKOINE MÄÄRINEEN */}
             <div className="space-y-3">
               <h4 className="text-base font-bold text-emerald-400">
                 🥗 Ehdotus 1 päivän aterioista
               </h4>
 
-              {activeMeals.breakfast && (
-                <div className="bg-slate-900 p-3.5 rounded-xl border border-slate-700">
+              {meals.breakfast && (
+                <div className="bg-slate-900 p-4 rounded-xl border border-slate-700">
                   <div className="text-xs font-bold uppercase text-amber-400">Aamupala</div>
-                  <div className="font-semibold text-white mt-0.5">{activeMeals.breakfast.name}</div>
-                  <div className="text-xs text-slate-400 mt-1">
-                    Ainekset: {activeMeals.breakfast.ingredients.join(", ")}
-                  </div>
+                  <div className="font-semibold text-white text-base mt-0.5">{meals.breakfast.name}</div>
+                  <ul className="text-xs text-slate-300 mt-2 space-y-1 pl-4 list-disc">
+                    {meals.breakfast.ingredients.map((ing, idx) => (
+                      <li key={idx}>{ing}</li>
+                    ))}
+                  </ul>
                 </div>
               )}
 
-              {activeMeals.lunch && (
-                <div className="bg-slate-900 p-3.5 rounded-xl border border-slate-700">
+              {meals.lunch && (
+                <div className="bg-slate-900 p-4 rounded-xl border border-slate-700">
                   <div className="text-xs font-bold uppercase text-blue-400">Lounas</div>
-                  <div className="font-semibold text-white mt-0.5">{activeMeals.lunch.name}</div>
-                  <div className="text-xs text-slate-400 mt-1">
-                    Ainekset: {activeMeals.lunch.ingredients.join(", ")}
-                  </div>
+                  <div className="font-semibold text-white text-base mt-0.5">{meals.lunch.name}</div>
+                  <ul className="text-xs text-slate-300 mt-2 space-y-1 pl-4 list-disc">
+                    {meals.lunch.ingredients.map((ing, idx) => (
+                      <li key={idx}>{ing}</li>
+                    ))}
+                  </ul>
                 </div>
               )}
 
-              {activeMeals.dinner && (
-                <div className="bg-slate-900 p-3.5 rounded-xl border border-slate-700">
+              {meals.dinner && (
+                <div className="bg-slate-900 p-4 rounded-xl border border-slate-700">
                   <div className="text-xs font-bold uppercase text-emerald-400">Päivällinen</div>
-                  <div className="font-semibold text-white mt-0.5">{activeMeals.dinner.name}</div>
-                  <div className="text-xs text-slate-400 mt-1">
-                    Ainekset: {activeMeals.dinner.ingredients.join(", ")}
-                  </div>
+                  <div className="font-semibold text-white text-base mt-0.5">{meals.dinner.name}</div>
+                  <ul className="text-xs text-slate-300 mt-2 space-y-1 pl-4 list-disc">
+                    {meals.dinner.ingredients.map((ing, idx) => (
+                      <li key={idx}>{ing}</li>
+                    ))}
+                  </ul>
                 </div>
               )}
 
-              {activeMeals.snack && (
-                <div className="bg-slate-900 p-3.5 rounded-xl border border-slate-700">
+              {meals.snack && (
+                <div className="bg-slate-900 p-4 rounded-xl border border-slate-700">
                   <div className="text-xs font-bold uppercase text-purple-400">Iltapala / Välipala</div>
-                  <div className="font-semibold text-white mt-0.5">{activeMeals.snack.name}</div>
-                  <div className="text-xs text-slate-400 mt-1">
-                    Ainekset: {activeMeals.snack.ingredients.join(", ")}
-                  </div>
+                  <div className="font-semibold text-white text-base mt-0.5">{meals.snack.name}</div>
+                  <ul className="text-xs text-slate-300 mt-2 space-y-1 pl-4 list-disc">
+                    {meals.snack.ingredients.map((ing, idx) => (
+                      <li key={idx}>{ing}</li>
+                    ))}
+                  </ul>
                 </div>
               )}
             </div>
 
-            {/* SÄHKÖPOSTI & MARKKINOINTI-HOOK */}
+            {/* SÄHKÖPOSTI & MARKKINOINTI */}
             <div className="bg-slate-900/90 border border-slate-700 rounded-xl p-5 text-center mt-6">
               <h4 className="font-bold text-lg text-emerald-400 mb-1">
                 📧 Lähetä tämä suunnitelma sähköpostiisi
@@ -520,12 +482,12 @@ export default function Home() {
               </p>
 
               {emailSent ? (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <div className="p-3 bg-emerald-900/50 border border-emerald-500/50 rounded-lg text-emerald-300 text-sm font-semibold">
                     ✓ Lähetetty osoitteeseen: {email}! Tarkista sähköpostisi.
                   </div>
                   
-                  {/* MARKKINOINTIVIESTI / CTA APPIIN / LISÄATERIOIHIN */}
+                  {/* MARKKINOINTIVIESTI / CTA APPIIN */}
                   <div className="p-4 bg-slate-800 rounded-lg border border-slate-700 text-left">
                     <p className="text-xs font-bold text-amber-400 uppercase tracking-wider mb-1">
                       🔥 Haluatko lisää vaihtelua ja automaattisen seurannan?
