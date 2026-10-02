@@ -2,17 +2,14 @@
 
 import React, { useState } from "react";
 
-// Tyyppimäärittelyt resepteille
 type Recipe = {
   id: string;
   name: string;
   category: "breakfast" | "lunch" | "dinner" | "snack";
-  diets: string[]; // "omnivore", "veggie", "vegan", "keto"
-  baseMacros: { p: number; f: number; c: number }; // suhteelliset painotukset
+  diets: string[];
   ingredients: string[];
 };
 
-// Reseptipankki
 const RECIPE_BOOK: Recipe[] = [
   // AAMUPALAT
   {
@@ -20,92 +17,90 @@ const RECIPE_BOOK: Recipe[] = [
     name: "Kaurapuuro proteiinilla & marjoilla",
     category: "breakfast",
     diets: ["omnivore", "veggie"],
-    baseMacros: { p: 30, f: 10, c: 60 },
-    ingredients: ["Kaurahiutale", "Heraproteiini / Raejuusto", "Pakastemarjat", "Pähkinät"],
+    ingredients: ["80g kaurahiutale", "30g heraproteiini / 150g raejuusto", "100g pakastemarjat", "15g pähkinät"],
   },
   {
     id: "b2",
     name: "Munamies-Munakas & Tumma leipä",
     category: "breakfast",
     diets: ["omnivore", "veggie"],
-    baseMacros: { p: 35, f: 25, c: 40 },
-    ingredients: ["Kananmunat & Valkuaiset", "Ruisleipä", "Kinkku / Juusto", "Vihannekset"],
+    ingredients: ["3 kananmunaa", "2 viipaletta ruisleipää", "50g leiketta / juustoa", "Kurkkua & tomaattia"],
   },
   {
     id: "b3",
     name: "Keto-Eines: Pekoni-Munakas & Avokado",
     category: "breakfast",
     diets: ["keto", "omnivore"],
-    baseMacros: { p: 30, f: 65, c: 5 },
-    ingredients: ["Kananmunat", "Pekoni", "Avokado", "Pinaatti & Oliiviöljy"],
+    ingredients: ["3 kananmunaa", "4 viipaletta pekonia", "1 kpl avokado", "Pinaattia & oliiviöljyä"],
   },
   {
     id: "b4",
     name: "Vegaaninen Chian-siemenpuuro & Pähkinävoi",
     category: "breakfast",
     diets: ["vegan", "veggie"],
-    baseMacros: { p: 20, f: 40, c: 40 },
-    ingredients: ["Chian-siemenet", "Kasvimaito", "Vegaaniproteiini", "Pähkinävoi & Banaani"],
+    ingredients: ["3 rkl chian-siemeniä", "2 dl kasvimaitoa", "30g vegaaniproteiinia", "1 rkl pähkinävoita"],
   },
 
-  // LOUNAT / PÄIVÄLLISET
+  // LOUNAT
   {
     id: "l1",
     name: "Kana-Riisikulho & Kasvikset",
     category: "lunch",
     diets: ["omnivore"],
-    baseMacros: { p: 40, f: 15, c: 45 },
-    ingredients: ["Broilerin rinta-filee", "Riisi / Peruna", "Lohkotut kasvikset", "Oliiviöljy"],
+    ingredients: ["180g broilerin rinta-filee", "70g (raakapaino) riisi / peruna", "150g kasviksia", "1 rkl oliiviöljyä"],
   },
   {
     id: "l2",
     name: "Jauheliha-Bataattilautanen",
     category: "lunch",
     diets: ["omnivore"],
-    baseMacros: { p: 35, f: 25, c: 40 },
-    ingredients: ["Naudan jauheliha (10%)", "Bataatti / Riisi", "Parsakaali", "Avokado"],
+    ingredients: ["180g naudan jauheliha (10%)", "200g bataattia", "150g parsakaalia", "1/2 avokado"],
   },
   {
     id: "l3",
     name: "Keto-Lohisalaatti & Feta",
     category: "lunch",
     diets: ["keto", "omnivore"],
-    baseMacros: { p: 30, f: 65, c: 5 },
-    ingredients: ["Uunilohi", "Fetajuusto", "Oliiviöljy", "Runsas vihersalaatti & Kurkku"],
+    ingredients: ["200g uunilohta", "50g fetajuustoa", "2 rkl oliiviöljyä", "Runsas vihersalaatti"],
   },
   {
     id: "l4",
     name: "Tofu-Kastike & Tumma Riisi",
     category: "lunch",
     diets: ["vegan", "veggie"],
-    baseMacros: { p: 30, f: 20, c: 50 },
-    ingredients: ["Aito Tofu / Nyhtökaura", "Tumma riisi", "Kookosmaito (kevyt)", "Wokkivihannekset"],
+    ingredients: ["200g tofu / nyhtökaura", "70g tumma riisi", "1 dl kevyt kookosmaito", "Wokkivihanneksia"],
   },
 
-  // ILTAPALAT / VÄLIPALAT
+  // PÄIVÄLLISET
+  {
+    id: "d1",
+    name: "Uunilohi & Perunamuusi",
+    category: "dinner",
+    diets: ["omnivore"],
+    ingredients: ["180g uunilohta", "250g perunaa", "100g vihreitä papuja", "Tilli-kermaviilikastike"],
+  },
+  {
+    id: "d2",
+    name: "Nauta-Wokki & Nuudelit",
+    category: "dinner",
+    diets: ["omnivore"],
+    ingredients: ["180g naudan suikaleita", "60g täysjyvänuudelia", "200g wok-vihanneksia", "Soijakastike & seesamiöljy"],
+  },
+
+  // ILTAPALAT
   {
     id: "s1",
     name: "Maitorahka / Vegerahka & Marjat",
     category: "snack",
     diets: ["omnivore", "veggie", "vegan"],
-    baseMacros: { p: 45, f: 10, c: 45 },
-    ingredients: ["Maustamaton Maitorahka / Soijarahka", "Pähkinät / Mantelit", "Sekoitusmarjat"],
+    ingredients: ["250g maustamaton maitorahka / soijarahka", "150g pakastemarjoja", "20g pähkinöitä"],
   },
   {
     id: "s2",
-    name: "Proteiinismoothie & Pähkinät",
+    name: "Proteiinismoothie & Pähkinävoi",
     category: "snack",
     diets: ["omnivore", "veggie", "vegan"],
-    baseMacros: { p: 40, f: 20, c: 40 },
-    ingredients: ["Proteiinijauhe", "Banaani & Pakastemustikka", "Maito / Kasvimaito", "Mandelivoi"],
-  },
-  {
-    id: "s3",
-    name: "Keto-Raejuusto & Oliiviöljy -Lautanen",
-    category: "snack",
-    diets: ["keto", "omnivore", "veggie"],
-    baseMacros: { p: 35, f: 60, c: 5 },
-    ingredients: ["Rasvainen Raejuusto", "Saksanpähkinät", "Kylmäpuristettu oliiviöljy", "Kurkku"],
+    ingredients: ["30g heraproteiini / vegaaniproteiini", "1 kpl banaani", "2 dl maito / kasvimaito", "1 rkl pähkinävoi"],
   }
 ];
 
@@ -123,35 +118,30 @@ export default function Home() {
 
   const [email, setEmail] = useState<string>("");
   const [emailSent, setEmailSent] = useState<boolean>(false);
+  const [isSending, setIsSending] = useState<boolean>(false);
 
-  // Valitut ateriat käyttäjälle
   const [activeMeals, setActiveMeals] = useState<{ [key: string]: Recipe }>({});
   const [results, setResults] = useState<any>(null);
 
-  // Arvo tai hae sopiva resepti
-  const getRandomRecipe = (category: "breakfast" | "lunch" | "snack", currentId?: string) => {
+  const getSuitableRecipe = (category: "breakfast" | "lunch" | "dinner" | "snack") => {
     const suitable = RECIPE_BOOK.filter(
-      (r) => r.category === category && r.diets.includes(diet) && r.id !== currentId
+      (r) => (r.category === category || (category === "dinner" && r.category === "lunch")) && r.diets.includes(diet)
     );
     if (suitable.length === 0) {
-      return RECIPE_BOOK.find((r) => r.category === category) || RECIPE_BOOK[0];
+      return RECIPE_BOOK.find((r) => r.category === "breakfast") || RECIPE_BOOK[0];
     }
     return suitable[Math.floor(Math.random() * suitable.length)];
   };
 
   const calculateMacros = () => {
-    // 1. BMR (Mifflin-St Jeor)
     let bmr = 10 * weight + 6.25 * height - 5 * age;
     bmr += gender === "male" ? 5 : -161;
 
-    // 2. TDEE
     const tdee = Math.round(bmr * activity);
 
-    // 3. Kalorimuutos
     let deficit = goalPreset === "custom" ? customDeficit : parseInt(goalPreset, 10);
     const targetCalories = Math.max(1200, tdee + deficit);
 
-    // 4. Makrojen jako
     let proteinGrams = 0;
     let fatGrams = 0;
     let carbGrams = 0;
@@ -177,7 +167,6 @@ export default function Home() {
 
     const fiberGrams = Math.round((targetCalories / 1000) * 14);
 
-    // 5. Ennuste
     const weightDiff = targetWeight - weight;
     let weeklyChange = 0;
     let weeksToGoal = 0;
@@ -197,13 +186,14 @@ export default function Home() {
       }
     }
 
-    // Valitaan alkureseptit aterioille
-    setActiveMeals({
-      breakfast: getRandomRecipe("breakfast"),
-      lunch: getRandomRecipe("lunch"),
-      dinner: getRandomRecipe("lunch"),
-      snack: getRandomRecipe("snack"),
-    });
+    const meals = {
+      breakfast: getSuitableRecipe("breakfast"),
+      lunch: getSuitableRecipe("lunch"),
+      dinner: getSuitableRecipe("dinner"),
+      snack: getSuitableRecipe("snack"),
+    };
+
+    setActiveMeals(meals);
 
     setResults({
       bmr: Math.round(bmr),
@@ -221,17 +211,33 @@ export default function Home() {
     });
   };
 
-  // Reseptin vaihtaminen dynaamisesti
-  const swapMeal = (mealKey: "breakfast" | "lunch" | "dinner" | "snack", category: "breakfast" | "lunch" | "snack") => {
-    const current = activeMeals[mealKey];
-    const newRecipe = getRandomRecipe(category, current?.id);
-    setActiveMeals((prev) => ({ ...prev, [mealKey]: newRecipe }));
-  };
-
-  const handleSendEmail = (e: React.FormEvent) => {
+  const handleSendEmail = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email) {
-      setEmailSent(true);
+    if (!email || !results) return;
+
+    setIsSending(true);
+
+    try {
+      const res = await fetch("/api/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          results,
+          activeMeals,
+        }),
+      });
+
+      if (res.ok) {
+        setEmailSent(true);
+      } else {
+        alert("Sähköpostin lähetyksessä tapahtui virhe. Yritä uudelleen.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Yhteysvirhe sähköpostia lähetettäessä.");
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -388,7 +394,7 @@ export default function Home() {
             onClick={calculateMacros}
             className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3.5 rounded-xl transition shadow-lg mt-2"
           >
-            Laske makrot, ennuste & ruokavalio
+            Laske makrot & näytä ruokavalio
           </button>
         </div>
 
@@ -457,106 +463,83 @@ export default function Home() {
               </div>
             </div>
 
-            {/* DYNAAMINEN ATERIASUUNNITELMA & "VAIHDA ATERIA" */}
-            <div className="space-y-4">
-              <h4 className="text-base font-bold text-emerald-400 flex justify-between items-center">
-                <span>🥗 Ehdotus päivän aterioista</span>
-                <span className="text-xs text-slate-400 font-normal">Klikkaa 🔄 vaihtaaksesi reseptiä</span>
+            {/* 1 PÄIVÄN VALMIS ATERIASUUNNITELMA */}
+            <div className="space-y-3">
+              <h4 className="text-base font-bold text-emerald-400">
+                🥗 Ehdotus 1 päivän aterioista
               </h4>
 
-              {/* Aamupala */}
               {activeMeals.breakfast && (
-                <div className="bg-slate-900 p-4 rounded-xl border border-slate-700 flex justify-between items-start gap-4">
-                  <div>
-                    <div className="text-xs font-bold uppercase text-amber-400">Aamupala</div>
-                    <div className="font-semibold text-white mt-0.5">{activeMeals.breakfast.name}</div>
-                    <div className="text-xs text-slate-400 mt-1">
-                      Ainekset: {activeMeals.breakfast.ingredients.join(", ")}
-                    </div>
+                <div className="bg-slate-900 p-3.5 rounded-xl border border-slate-700">
+                  <div className="text-xs font-bold uppercase text-amber-400">Aamupala</div>
+                  <div className="font-semibold text-white mt-0.5">{activeMeals.breakfast.name}</div>
+                  <div className="text-xs text-slate-400 mt-1">
+                    Ainekset: {activeMeals.breakfast.ingredients.join(", ")}
                   </div>
-                  <button
-                    onClick={() => swapMeal("breakfast", "breakfast")}
-                    className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm border border-slate-600"
-                    title="Vaihda resepti"
-                  >
-                    🔄
-                  </button>
                 </div>
               )}
 
-              {/* Lounas */}
               {activeMeals.lunch && (
-                <div className="bg-slate-900 p-4 rounded-xl border border-slate-700 flex justify-between items-start gap-4">
-                  <div>
-                    <div className="text-xs font-bold uppercase text-blue-400">Lounas</div>
-                    <div className="font-semibold text-white mt-0.5">{activeMeals.lunch.name}</div>
-                    <div className="text-xs text-slate-400 mt-1">
-                      Ainekset: {activeMeals.lunch.ingredients.join(", ")}
-                    </div>
+                <div className="bg-slate-900 p-3.5 rounded-xl border border-slate-700">
+                  <div className="text-xs font-bold uppercase text-blue-400">Lounas</div>
+                  <div className="font-semibold text-white mt-0.5">{activeMeals.lunch.name}</div>
+                  <div className="text-xs text-slate-400 mt-1">
+                    Ainekset: {activeMeals.lunch.ingredients.join(", ")}
                   </div>
-                  <button
-                    onClick={() => swapMeal("lunch", "lunch")}
-                    className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm border border-slate-600"
-                    title="Vaihda resepti"
-                  >
-                    🔄
-                  </button>
                 </div>
               )}
 
-              {/* Päivällinen */}
               {activeMeals.dinner && (
-                <div className="bg-slate-900 p-4 rounded-xl border border-slate-700 flex justify-between items-start gap-4">
-                  <div>
-                    <div className="text-xs font-bold uppercase text-emerald-400">Päivällinen</div>
-                    <div className="font-semibold text-white mt-0.5">{activeMeals.dinner.name}</div>
-                    <div className="text-xs text-slate-400 mt-1">
-                      Ainekset: {activeMeals.dinner.ingredients.join(", ")}
-                    </div>
+                <div className="bg-slate-900 p-3.5 rounded-xl border border-slate-700">
+                  <div className="text-xs font-bold uppercase text-emerald-400">Päivällinen</div>
+                  <div className="font-semibold text-white mt-0.5">{activeMeals.dinner.name}</div>
+                  <div className="text-xs text-slate-400 mt-1">
+                    Ainekset: {activeMeals.dinner.ingredients.join(", ")}
                   </div>
-                  <button
-                    onClick={() => swapMeal("dinner", "lunch")}
-                    className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm border border-slate-600"
-                    title="Vaihda resepti"
-                  >
-                    🔄
-                  </button>
                 </div>
               )}
 
-              {/* Iltapala */}
               {activeMeals.snack && (
-                <div className="bg-slate-900 p-4 rounded-xl border border-slate-700 flex justify-between items-start gap-4">
-                  <div>
-                    <div className="text-xs font-bold uppercase text-purple-400">Iltapala / Välipala</div>
-                    <div className="font-semibold text-white mt-0.5">{activeMeals.snack.name}</div>
-                    <div className="text-xs text-slate-400 mt-1">
-                      Ainekset: {activeMeals.snack.ingredients.join(", ")}
-                    </div>
+                <div className="bg-slate-900 p-3.5 rounded-xl border border-slate-700">
+                  <div className="text-xs font-bold uppercase text-purple-400">Iltapala / Välipala</div>
+                  <div className="font-semibold text-white mt-0.5">{activeMeals.snack.name}</div>
+                  <div className="text-xs text-slate-400 mt-1">
+                    Ainekset: {activeMeals.snack.ingredients.join(", ")}
                   </div>
-                  <button
-                    onClick={() => swapMeal("snack", "snack")}
-                    className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm border border-slate-600"
-                    title="Vaihda resepti"
-                  >
-                    🔄
-                  </button>
                 </div>
               )}
             </div>
 
-            {/* SÄHKÖPOSTIN KERUU */}
+            {/* SÄHKÖPOSTI & MARKKINOINTI-HOOK */}
             <div className="bg-slate-900/90 border border-slate-700 rounded-xl p-5 text-center mt-6">
-              <h4 className="font-bold text-lg text-emerald-400 mb-2">
-                📧 Tilaa täydellinen 7 päivän ateriasuunnitelma & kauppalista
+              <h4 className="font-bold text-lg text-emerald-400 mb-1">
+                📧 Lähetä tämä suunnitelma sähköpostiisi
               </h4>
               <p className="text-slate-300 text-xs mb-4">
-                Lähetämme sinulle ilmaisen PDF-oppaan, tarkan ostoslistan sekä lisää ateria-vaihtoehtoja sähköpostiisi.
+                Saat tämän 1 päivän ruokavalion, makrosi ja painoennusteesi talteen sähköpostiisi!
               </p>
 
               {emailSent ? (
-                <div className="p-3 bg-emerald-900/50 border border-emerald-500/50 rounded-lg text-emerald-300 text-sm font-semibold">
-                  ✓ Kiitos! Täydellinen 7 päivän ateriasuunnitelmasi ja kauppalistasi on lähetetty osoitteeseen: {email}
+                <div className="space-y-3">
+                  <div className="p-3 bg-emerald-900/50 border border-emerald-500/50 rounded-lg text-emerald-300 text-sm font-semibold">
+                    ✓ Lähetetty osoitteeseen: {email}! Tarkista sähköpostisi.
+                  </div>
+                  
+                  {/* MARKKINOINTIVIESTI / CTA APPIIN / LISÄATERIOIHIN */}
+                  <div className="p-4 bg-slate-800 rounded-lg border border-slate-700 text-left">
+                    <p className="text-xs font-bold text-amber-400 uppercase tracking-wider mb-1">
+                      🔥 Haluatko lisää vaihtelua ja automaattisen seurannan?
+                    </p>
+                    <p className="text-xs text-slate-300 mb-3">
+                      Lataamalla sovelluksemme saat käyttöösi yli 200+ erilaista reseptiä, automaattisen ostoslistan sekä viikoittaisen painonseurannan.
+                    </p>
+                    <button
+                      onClick={() => alert("Sovelluksen latauslinkki / tilaussivu aukeaa pian!")}
+                      className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2.5 rounded-lg text-xs transition"
+                    >
+                      Kokeile sovellusta 14 päivää ilmaiseksi →
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <form onSubmit={handleSendEmail} className="flex flex-col sm:flex-row gap-2">
@@ -570,9 +553,10 @@ export default function Home() {
                   />
                   <button
                     type="submit"
-                    className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-5 py-3 rounded-lg transition text-sm whitespace-nowrap"
+                    disabled={isSending}
+                    className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-5 py-3 rounded-lg transition text-sm whitespace-nowrap disabled:opacity-50"
                   >
-                    Lähetä ilmainen opas & kauppalista
+                    {isSending ? "Lähetetään..." : "Lähetä suunnitelma"}
                   </button>
                 </form>
               )}
