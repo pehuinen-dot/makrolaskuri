@@ -10,7 +10,6 @@ type Meal = {
 export default function Home() {
   const [gender, setGender] = useState<"male" | "female">("male");
   
-  // Käytetään merkkijonoja (string) tateissa, jotta kentän voi tyhjentää ilman nollan jäämistä
   const [age, setAge] = useState<string>("38");
   const [height, setHeight] = useState<string>("175");
   const [weight, setWeight] = useState<string>("90");
@@ -29,7 +28,6 @@ export default function Home() {
   const [results, setResults] = useState<any>(null);
 
   const calculateMacros = () => {
-    // Muutetaan numeroksi vasta laskentahetkellä
     const numAge = Number(age) || 0;
     const numHeight = Number(height) || 0;
     const numWeight = Number(weight) || 0;
@@ -94,7 +92,7 @@ export default function Home() {
       }
     }
 
-    // Ateriamallit
+    // Ateriamallit ruokavalion mukaan
     let generatedMeals: { [key: string]: Meal } = {};
 
     if (diet === "keto") {
@@ -114,6 +112,25 @@ export default function Home() {
         snack: {
           name: "Keto-välipala: Raejuusto & pähkinät",
           ingredients: ["200g rasvaista raejuustoa (4%)", "30g saksanpähkinöitä", "1 rkl oliiviöljyä"],
+        },
+      };
+    } else if (diet === "gluten_free") {
+      generatedMeals = {
+        breakfast: {
+          name: "Gluteeniton kaurapuuro & marjat",
+          ingredients: ["80g gluteenittomia kaurahiutaleita", "30g heraproteiinia (tai 150g raejuustoa)", "100g pakastemarjoja", "15g pähkinöitä"],
+        },
+        lunch: {
+          name: "Kana-riisikulho & kasvikset (GF)",
+          ingredients: ["180g broilerin rinta-fileetä", "70g (raakapaino) täysjyväriisiä", "150g höyrytettyjä kasviksia", "1 rkl oliiviöljyä"],
+        },
+        dinner: {
+          name: "Uunilohi & keitetyt perunat (GF)",
+          ingredients: ["180g uunilohta", "250g keitettyä perunaa", "150g tuoresalaattia", "1 rkl oliiviöljyä / kermaviiliä"],
+        },
+        snack: {
+          name: "Maitorahka & marjat (GF)",
+          ingredients: ["250g maustamatonta maitorahkaa", "150g pakastemustikoita", "20g saksanpähkinöitä"],
         },
       };
     } else if (diet === "vegan") {
@@ -136,6 +153,7 @@ export default function Home() {
         },
       };
     } else {
+      // Sekasyöjä & Kasvissyöjä
       generatedMeals = {
         breakfast: {
           name: "Kaurapuuro proteiinilla & marjoilla",
@@ -351,6 +369,7 @@ export default function Home() {
               className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-emerald-500"
             >
               <option value="omnivore">Sekasyöjä (Kaikki käy)</option>
+              <option value="gluten_free">Gluteeniton</option>
               <option value="veggie">Kasvissyöjä (Lacto-Ovo)</option>
               <option value="vegan">Vegaani</option>
               <option value="keto">Ketogeeninen (Keto)</option>
@@ -430,7 +449,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* 1 PÄIVÄN VALMIS ATERIASUUNNITELMA TARKKOINE MÄÄRINEEN */}
+            {/* 1 PÄIVÄN VALMIS ATERIASUUNNITELMA */}
             <div className="space-y-3">
               <h4 className="text-base font-bold text-emerald-400">
                 🥗 Ehdotus 1 päivän aterioista
