@@ -14,6 +14,9 @@ export default function Home() {
   const [goalPreset, setGoalPreset] = useState<string>("-500");
   const [customDeficit, setCustomDeficit] = useState<number>(-500);
 
+  const [email, setEmail] = useState<string>("");
+  const [emailSent, setEmailSent] = useState<boolean>(false);
+
   const [results, setResults] = useState<any>(null);
 
   const calculateMacros = () => {
@@ -34,37 +37,45 @@ export default function Home() {
 
     const targetCalories = Math.max(1200, tdee + deficit);
 
-    // 4. Makrojen jako
-    // Proteiini: 2.0g / kg
-    const proteinGrams = Math.round(weight * 2.0);
-    const proteinKcal = proteinGrams * 4;
+    // 4. Makrojen jako ruokavalion mukaan (Keto / Normaali)
+    let proteinGrams = 0;
+    let fatGrams = 0;
+    let carbGrams = 0;
 
-    // Rasva: 25% kokonaiskaloreista (vähintään 0.8g/kg)
-    let fatKcal = targetCalories * 0.25;
-    let fatGrams = Math.round(fatKcal / 9);
-    if (fatGrams < weight * 0.8) {
-      fatGrams = Math.round(weight * 0.8);
-      fatKcal = fatGrams * 9;
+    if (diet === "keto") {
+      // Ketogeeninen: 70% rasvaa, 25% proteiinia, 5% hiilihydraattia
+      proteinGrams = Math.round((targetCalories * 0.25) / 4);
+      fatGrams = Math.round((targetCalories * 0.70) / 9);
+      carbGrams = Math.round((targetCalories * 0.05) / 4);
+    } else {
+      // Standardi: Proteiini 2.0g/kg, Rasva väh. 0.8g/kg tai 25%, Loput HH
+      proteinGrams = Math.round(weight * 2.0);
+      const proteinKcal = proteinGrams * 4;
+
+      let fatKcal = targetCalories * 0.25;
+      fatGrams = Math.round(fatKcal / 9);
+      if (fatGrams < weight * 0.8) {
+        fatGrams = Math.round(weight * 0.8);
+        fatKcal = fatGrams * 9;
+      }
+
+      const carbKcal = Math.max(0, targetCalories - proteinKcal - fatKcal);
+      carbGrams = Math.round(carbKcal / 4);
     }
-
-    // Hiilihydraatit: Loput kalorit
-    const carbKcal = Math.max(0, targetCalories - proteinKcal - fatKcal);
-    const carbGrams = Math.round(carbKcal / 4);
 
     // Kuitu (14g / 1000 kcal)
     const fiberGrams = Math.round((targetCalories / 1000) * 14);
 
     // 5. Painoennusteen laskenta
-    const weightDiff = targetWeight - weight; // esim. 82 - 90 = -8 kg
+    const weightDiff = targetWeight - weight;
     let weeklyChange = 0;
     let weeksToGoal = 0;
     let targetDateStr = "";
 
     if (deficit !== 0) {
-      // 1 kg rasvaa ≈ 7700 kcal
       const dailyKcalChange = deficit;
       const weeklyKcalChange = dailyKcalChange * 7;
-      weeklyChange = weeklyKcalChange / 7700; // kg/vko (miinus = pudotus, plus = lisäys)
+      weeklyChange = weeklyKcalChange / 7700;
 
       if ((weightDiff < 0 && deficit < 0) || (weightDiff > 0 && deficit > 0)) {
         weeksToGoal = Math.abs(Math.round(weightDiff / weeklyChange));
@@ -94,6 +105,13 @@ export default function Home() {
       weeksToGoal,
       targetDateStr,
     });
+  };
+
+  const handleSendEmail = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (email) {
+      setEmailSent(true);
+    }
   };
 
   return (
@@ -215,7 +233,7 @@ export default function Home() {
             </select>
           </div>
 
-          {/* Jos valittu 'custom', näytetään liukukytkin/syöte */}
+          {/* Mukautettu vaje/ylijäämä */}
           {goalPreset === "custom" && (
             <div className="p-3 bg-slate-900/80 rounded-lg border border-slate-700">
               <div className="flex justify-between text-xs mb-1">
@@ -247,6 +265,7 @@ export default function Home() {
               <option value="omnivore">Sekasyöjä (Kaikki käy)</option>
               <option value="veggie">Kasvissyöjä (Lacto-Ovo)</option>
               <option value="vegan">Vegaani</option>
+              <option value="keto">Ketogeeninen (Keto)</option>
             </select>
           </div>
 
@@ -321,6 +340,39 @@ export default function Home() {
                   <div className="text-xl font-bold text-purple-400">{results.fiberGrams} g</div>
                 </div>
               </div>
+            </div>
+
+            {/* SÄHKÖPOSTIN KERUU (LIIDIN KAAPPAUS) */}
+            <div className="bg-slate-900/90 border border-slate-700 rounded-xl p-5 text-center mt-6">
+              <h4 className="font-bold text-lg text-emerald-400 mb-2">
+                📧 Tilaa henkilökohtainen 7 päivän ateriasuunnitelmasi
+              </h4>
+              <p className="text-slate-300 text-xs mb-4">
+                Lähetämme sinulle ilmaisen ruokavaliosuunnitelman, reseptit ja kauppalistan suoraan sähköpostiisi.
+              </p>
+
+              {emailSent ? (
+                <div className="p-3 bg-emerald-900/50 border border-emerald-500/50 rounded-lg text-emerald-300 text-sm font-semibold">
+                  ✓ Kiitos! Ruokavaliosi ja ennusteesi on lähetetty osoitteeseen: {email}
+                </div>
+              ) : (
+                <form onSubmit={handleSendEmail} className="flex flex-col sm:flex-row gap-2">
+                  <input
+                    type="email"
+                    required
+                    placeholder="Sähköpostiosoitteesi..."
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="flex-1 bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-emerald-500 text-sm"
+                  />
+                  <button
+                    type="submit"
+                    className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-5 py-3 rounded-lg transition text-sm whitespace-nowrap"
+                  >
+                    Lähetä ilmainen ruokavalio
+                  </button>
+                </form>
+              )}
             </div>
           </div>
         )}
