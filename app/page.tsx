@@ -16,7 +16,7 @@ export default function Home() {
   const [targetWeight, setTargetWeight] = useState<string>("82");
 
   const [activity, setActivity] = useState<number>(1.55);
-  const [diet, setDiet] = useState<string>("omnivore");
+  const [diet, setDiet] = useState<string>("sekasyöjä");
   const [goalPreset, setGoalPreset] = useState<string>("-500");
   const [customDeficit, setCustomDeficit] = useState<number>(-500);
 
@@ -54,17 +54,12 @@ export default function Home() {
     const proteinGrams = Math.round(numWeight * 2);
     const proteinCalories = proteinGrams * 4;
 
-    // Rasva: Keto-dietillä enemmän rasvaa, muuten ~25%
+    // Rasva: Ketolla enemmän, muuten ~25%
     const fatCalories = diet === "keto" ? targetCalories * 0.70 : targetCalories * 0.25;
     const fatGrams = Math.round(fatCalories / 9);
 
-    // Hiilihydraatti: Keto-dietillä minimiin, muuten loput
-    let carbCalories = 0;
-    if (diet === "keto") {
-      carbCalories = Math.max(0, targetCalories - proteinCalories - fatCalories);
-    } else {
-      carbCalories = Math.max(0, targetCalories - proteinCalories - fatCalories);
-    }
+    // Hiilihydraatti
+    const carbCalories = Math.max(0, targetCalories - proteinCalories - fatCalories);
     const carbGrams = Math.round(carbCalories / 4);
 
     // Kuitu: min 30g
@@ -110,7 +105,7 @@ export default function Home() {
   };
 
   const generateMealPlan = (selectedDiet: string) => {
-    if (selectedDiet === "vegan") {
+    if (selectedDiet === "vegaani") {
       return {
         breakfast: {
           name: "Kaurapuuro, nyhtökaura & pähkinät",
@@ -150,12 +145,12 @@ export default function Home() {
       };
     }
 
-    if (selectedDiet === "vegetarian") {
+    if (selectedDiet === "kasvis") {
       return {
         breakfast: {
           name: "Kreikkalainen jogurtti, mysli & marjat",
           ingredients: [
-            "250g kreikkalaista jogurttia (tai bulgarian jogurttia)",
+            "250g kreikkalaista jogurttia",
             "40g täysjyvämysliä",
             "100g vadelmia tai mansikoita",
             "1 rkl hunajaa",
@@ -222,14 +217,14 @@ export default function Home() {
           name: "Avokado-rahkamousse tai pähkinät",
           ingredients: [
             "150g täysrasvaista rahkaa",
-            "30g pika- tai makadamiapähkinöitä",
+            "30g makadamiapähkinöitä",
             "Tilkka kuohukermaa",
           ],
         },
       };
     }
 
-    if (selectedDiet === "glutenfree") {
+    if (selectedDiet === "gluteeniton") {
       return {
         breakfast: {
           name: "Gluteeniton puuro & marjat",
@@ -268,7 +263,7 @@ export default function Home() {
       };
     }
 
-    // Oletus: Sekaani (omnivore)
+    // Oletus: Sekasyöjä
     return {
       breakfast: {
         name: "Kaurapuuro & heraproteiini / raejuusto",
@@ -282,16 +277,16 @@ export default function Home() {
       lunch: {
         name: "Kana-riisikulho & kasvikset",
         ingredients: [
-          "180g broilerin rinta-fileetä (tai Nyhtökauraa)",
+          "180g broilerin rintafileetä",
           "75g tummaa riisiä (kuivapaino)",
           "150g höyrytettyjä kasviksia",
           "10g oliiviöljyä tai pähkinäöljyä",
         ],
       },
       dinner: {
-        name: "Jauheliha- / nyhtökaurakastike & perunat",
+        name: "Jauhelihakastike & perunat",
         ingredients: [
-          "180g naudan jauhelihaa (10%) tai jauhistuotetta",
+          "180g naudan jauhelihaa (10%)",
           "250g kuorittuja perunoita",
           "Runsaasti tuoresalaattia & kurkkua",
           "1 rkl salaatinkastiketta",
@@ -301,7 +296,7 @@ export default function Home() {
         name: "Rahka / Raejuusto & ruisleipä",
         ingredients: [
           "250g rasvatonta maitorahkaa tai raejuustoa",
-          "100g marjoja tai 1 omenan",
+          "100g marjoja tai 1 omena",
           "2 viipaletta ruisleipää + sipaisu levitettä & leikkeleitä",
         ],
       },
@@ -449,7 +444,7 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Ruokavalio */}
+            {/* Ruokavalio (Korjatuilla termeillä) */}
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                 Ruokavalion tyyppi
@@ -459,11 +454,11 @@ export default function Home() {
                 onChange={(e) => setDiet(e.target.value)}
                 className="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-slate-100 focus:outline-none focus:border-emerald-500"
               >
-                <option value="omnivore">Sekaani (Sekasyöjä)</option>
-                <option value="vegetarian">Kasvisruokavalio</option>
-                <option value="vegan">Vegaani</option>
+                <option value="sekasyöjä">Sekasyöjä</option>
+                <option value="kasvis">Kasvisruokavalio</option>
+                <option value="vegaani">Vegaani</option>
                 <option value="keto">Keto (Ketogeeninen)</option>
-                <option value="glutenfree">Gluteeniton</option>
+                <option value="gluteeniton">Gluteeniton</option>
               </select>
             </div>
 
