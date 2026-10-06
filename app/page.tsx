@@ -235,4 +235,376 @@ export default function Home() {
           ],
         },
         lunch: {
-          name: "Kana-riisikulho & kas
+          name: "Kana-riisikulho & kasvikset",
+          ingredients: [
+            "180g broilerin rintafileetä",
+            "75g riisiä tai kvinoaa",
+            "150g höyrytettyjä kasviksia",
+            "10g oliiviöljyä",
+          ],
+        },
+        dinner: {
+          name: "Naudanliha-perunamuusi",
+          ingredients: [
+            "180g naudan paistijauhelihaa (10%)",
+            "250g perunoita muusiksi tehtynä",
+            "Tuoretta salaattia",
+          ],
+        },
+        snack: {
+          name: "Gluteeniton välipala",
+          ingredients: [
+            "250g maitorahkaa",
+            "1 banaani",
+            "Kourallinen saksanpähkinöitä",
+          ],
+        },
+      };
+    }
+
+    // Oletus: Sekasyöjä
+    return {
+      breakfast: {
+        name: "Kaurapuuro & heraproteiini / raejuusto",
+        ingredients: [
+          "80g kaurahiutaleita",
+          "30g heraproteiinia (tai 150g raejuustoa)",
+          "100g pakastemarjoja",
+          "15g pähkinöitä / siemeniä",
+        ],
+      },
+      lunch: {
+        name: "Kana-riisikulho & kasvikset",
+        ingredients: [
+          "180g broilerin rintafileetä",
+          "75g tummaa riisiä (kuivapaino)",
+          "150g höyrytettyjä kasviksia",
+          "10g oliiviöljyä tai pähkinäöljyä",
+        ],
+      },
+      dinner: {
+        name: "Jauhelihakastike & perunat",
+        ingredients: [
+          "180g naudan jauhelihaa (10%)",
+          "250g kuorittuja perunoita",
+          "Runsaasti tuoresalaattia & kurkkua",
+          "1 rkl salaatinkastiketta",
+        ],
+      },
+      snack: {
+        name: "Rahka / Raejuusto & ruisleipä",
+        ingredients: [
+          "250g rasvatonta maitorahkaa tai raejuustoa",
+          "100g marjoja tai 1 omena",
+          "2 viipaletta ruisleipää + sipaisu levitettä & leikkeleitä",
+        ],
+      },
+    };
+  };
+
+  const sendEmail = async () => {
+    if (!email || !email.includes("@")) {
+      alert("Syötä toimiva sähköpostiosoite.");
+      return;
+    }
+
+    setIsSending(true);
+
+    try {
+      const res = await fetch("/api/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          results,
+          meals,
+        }),
+      });
+
+      if (res.ok) {
+        setEmailSent(true);
+      } else {
+        alert("Sähköpostin lähetyksessä tapahtui virhe. Yritä uudelleen.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Lähetys epäonnistui.");
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  return (
+    <main className="min-h-screen bg-[#F4F5F7] text-slate-900 py-12 px-4 sm:px-6 lg:px-8 font-sans">
+      <div className="max-w-4xl mx-auto space-y-8">
+        {/* Otsikko */}
+        <div className="text-center space-y-3">
+          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-[#0F172A]">
+            Makrolaskuri & Ruokavalio
+          </h1>
+          <p className="text-slate-600 text-base sm:text-lg max-w-xl mx-auto">
+            Laske henkilökohtaiset kalori- ja makrotavoitteesi sekä saa heti 1 päivän esimerkkiruokavalio sähköpostiisi.
+          </p>
+        </div>
+
+        {/* Syöteosio */}
+        <div className="bg-white border border-slate-200 p-6 sm:p-8 rounded-3xl shadow-sm space-y-6 transition-all duration-200">
+          <h2 className="text-xl font-bold text-[#1E3A8A] border-b border-slate-100 pb-3">
+            1. Syötä tietosi
+          </h2>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Sukupuoli */}
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Sukupuoli
+              </label>
+              <select
+                value={gender}
+                onChange={(e: any) => setGender(e.target.value)}
+                className="w-full bg-[#FAF9F6] border border-slate-200 rounded-xl p-3 text-slate-900 focus:outline-none focus:border-[#1E3A8A] transition"
+              >
+                <option value="male">Mies</option>
+                <option value="female">Nainen</option>
+              </select>
+            </div>
+
+            {/* Ikä */}
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Ikä (v)
+              </label>
+              <input
+                type="number"
+                value={age}
+                onChange={(e) => setAge(e.target.value)}
+                className="w-full bg-[#FAF9F6] border border-slate-200 rounded-xl p-3 text-slate-900 focus:outline-none focus:border-[#1E3A8A] transition"
+              />
+            </div>
+
+            {/* Pituus */}
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Pituus (cm)
+              </label>
+              <input
+                type="number"
+                value={height}
+                onChange={(e) => setHeight(e.target.value)}
+                className="w-full bg-[#FAF9F6] border border-slate-200 rounded-xl p-3 text-slate-900 focus:outline-none focus:border-[#1E3A8A] transition"
+              />
+            </div>
+
+            {/* Nykyinen paino */}
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Nykyinen paino (kg)
+              </label>
+              <input
+                type="number"
+                value={weight}
+                onChange={(e) => setWeight(e.target.value)}
+                className="w-full bg-[#FAF9F6] border border-slate-200 rounded-xl p-3 text-slate-900 focus:outline-none focus:border-[#1E3A8A] transition"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Tavoitepaino */}
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Tavoitepaino (kg)
+              </label>
+              <input
+                type="number"
+                value={targetWeight}
+                onChange={(e) => setTargetWeight(e.target.value)}
+                className="w-full bg-[#FAF9F6] border border-slate-200 rounded-xl p-3 text-slate-900 focus:outline-none focus:border-[#1E3A8A] transition"
+              />
+            </div>
+
+            {/* Aktiivisuustaso */}
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Aktiivisuus
+              </label>
+              <select
+                value={activity}
+                onChange={(e) => setActivity(Number(e.target.value))}
+                className="w-full bg-[#FAF9F6] border border-slate-200 rounded-xl p-3 text-slate-900 focus:outline-none focus:border-[#1E3A8A] transition"
+              >
+                <option value={1.2}>Kevyt (Iskutyö / vähän liikuntaa)</option>
+                <option value={1.375}>Kevyt liikunta (1-3 krt/vko)</option>
+                <option value={1.55}>Kohtalainen liikunta (3-5 krt/vko)</option>
+                <option value={1.725}>Aktiivinen urheilu (6-7 krt/vko)</option>
+                <option value={1.9}>Erittäin aktiivinen / fyysinen työ</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Ruokavalio */}
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Ruokavalion tyyppi
+              </label>
+              <select
+                value={diet}
+                onChange={(e) => setDiet(e.target.value)}
+                className="w-full bg-[#FAF9F6] border border-slate-200 rounded-xl p-3 text-slate-900 focus:outline-none focus:border-[#1E3A8A] transition"
+              >
+                <option value="sekasyöjä">Sekasyöjä</option>
+                <option value="kasvis">Kasvisruokavalio</option>
+                <option value="vegaani">Vegaani</option>
+                <option value="keto">Keto (Ketogeeninen)</option>
+                <option value="gluteeniton">Gluteeniton</option>
+              </select>
+            </div>
+
+            {/* Tavoite / Kalorivaje */}
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Tavoite
+              </label>
+              <select
+                value={goalPreset}
+                onChange={(e) => setGoalPreset(e.target.value)}
+                className="w-full bg-[#FAF9F6] border border-slate-200 rounded-xl p-3 text-slate-900 focus:outline-none focus:border-[#1E3A8A] transition"
+              >
+                <option value="-500">Rasvanpoltto (-500 kcal/pvä)</option>
+                <option value="-300">Maltillinen laihtuminen (-300 kcal/pvä)</option>
+                <option value="0">Painon ylläpito (0 kcal)</option>
+                <option value="300">Maltillinen lihaskasvu (+300 kcal/pvä)</option>
+                <option value="custom">Muu mukautettu muutos</option>
+              </select>
+            </div>
+          </div>
+
+          {goalPreset === "custom" && (
+            <div className="space-y-1 transition-all duration-200">
+              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Mukautettu kalorimuutos (kcal/pvä, esim. -400 tai +200)
+              </label>
+              <input
+                type="number"
+                value={customDeficit}
+                onChange={(e) => setCustomDeficit(Number(e.target.value))}
+                className="w-full bg-[#FAF9F6] border border-slate-200 rounded-xl p-3 text-slate-900 focus:outline-none focus:border-[#1E3A8A] transition"
+              />
+            </div>
+          )}
+
+          <button
+            onClick={calculateMacros}
+            className="w-full bg-[#1E3A8A] hover:bg-[#172554] text-white font-bold py-4 rounded-xl shadow-md transition transform active:scale-95 text-lg mt-4 cursor-pointer"
+          >
+            Laske makrot & näytä ruokavalio
+          </button>
+        </div>
+
+        {/* Tulokset & Ruokavalio */}
+        {results && (
+          <div className="space-y-8 transition-all duration-300 ease-in-out opacity-100 transform translate-y-0">
+            {/* Kortti: Tulokset */}
+            <div className="bg-white border border-slate-200 p-6 sm:p-8 rounded-3xl shadow-sm space-y-6">
+              <h2 className="text-xl font-bold text-[#1E3A8A] border-b border-slate-100 pb-3">
+                2. Henkilökohtaiset tuloksesi
+              </h2>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                <div className="bg-[#FAF9F6] p-4 rounded-2xl border border-slate-200/60">
+                  <div className="text-xs text-slate-500 font-semibold uppercase">Tavoitekalorit</div>
+                  <div className="text-2xl font-black text-[#1E3A8A] mt-1">{results.targetCalories}</div>
+                  <div className="text-xs text-slate-400">kcal / pvä</div>
+                </div>
+
+                <div className="bg-[#FAF9F6] p-4 rounded-2xl border border-slate-200/60">
+                  <div className="text-xs text-slate-500 font-semibold uppercase">Proteiini</div>
+                  <div className="text-2xl font-black text-slate-900 mt-1">{results.proteinGrams}g</div>
+                  <div className="text-xs text-slate-400">({Math.round(results.proteinGrams * 4)} kcal)</div>
+                </div>
+
+                <div className="bg-[#FAF9F6] p-4 rounded-2xl border border-slate-200/60">
+                  <div className="text-xs text-slate-500 font-semibold uppercase">Rasva</div>
+                  <div className="text-2xl font-black text-slate-900 mt-1">{results.fatGrams}g</div>
+                  <div className="text-xs text-slate-400">({Math.round(results.fatGrams * 9)} kcal)</div>
+                </div>
+
+                <div className="bg-[#FAF9F6] p-4 rounded-2xl border border-slate-200/60">
+                  <div className="text-xs text-slate-500 font-semibold uppercase">Hiilihydraatti</div>
+                  <div className="text-2xl font-black text-slate-900 mt-1">{results.carbGrams}g</div>
+                  <div className="text-xs text-slate-400">({Math.round(results.carbGrams * 4)} kcal)</div>
+                </div>
+              </div>
+
+              {results.weeksToGoal > 0 && (
+                <div className="bg-blue-50/70 border border-blue-200 p-4 rounded-2xl text-center space-y-1">
+                  <span className="text-[#1E3A8A] font-bold text-sm">Painoennuste tavoitteeseen ({results.targetWeight} kg):</span>
+                  <p className="text-slate-700 text-sm">
+                    Saavutat tavoitteesi noin <strong>{results.weeksToGoal} viikossa</strong> ({results.targetDateStr} mennessä).
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Kortti: Ateriaehdotus */}
+            <div className="bg-white border border-slate-200 p-6 sm:p-8 rounded-3xl shadow-sm space-y-6">
+              <h2 className="text-xl font-bold text-[#1E3A8A] border-b border-slate-100 pb-3">
+                Ehdotus 1 päivän aterioista
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Object.entries(meals).map(([key, meal]: [string, Meal]) => (
+                  <div key={key} className="bg-[#FAF9F6] p-5 rounded-2xl border border-slate-200/60 space-y-2">
+                    <span className="text-xs font-bold tracking-wider uppercase text-[#1E3A8A]">
+                      {key === "breakfast" ? "Aamupala" : key === "lunch" ? "Lounas" : key === "dinner" ? "Päivällinen" : "Iltapala / Välipala"}
+                    </span>
+                    <h3 className="font-bold text-slate-900">{meal.name}</h3>
+                    <ul className="text-xs text-slate-600 space-y-1 list-disc list-inside">
+                      {meal.ingredients.map((ing, i) => (
+                        <li key={i}>{ing}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+
+              {/* Sähköpostin lähetysosio */}
+              <div className="bg-[#FAF9F6] p-6 sm:p-8 rounded-3xl border border-slate-200/80 mt-8 text-center space-y-4">
+                <h3 className="text-xl font-bold text-slate-900">
+                  Lähetä makrosuunnitelma sähköpostiisi
+                </h3>
+                <p className="text-slate-600 text-sm max-w-md mx-auto">
+                  Syötä sähköpostiosoitteesi alle, niin lähetämme henkilökohtaisen raporttisi ja 1 päivän ruokavalion suoraan laatikkoosi.
+                </p>
+
+                {emailSent ? (
+                  <div className="bg-emerald-50 border border-emerald-300 text-emerald-800 p-4 rounded-2xl font-semibold text-sm">
+                    Suunnitelma lähetetty! Tarkista sähköpostisi (myös roskapostikansio).
+                  </div>
+                ) : (
+                  <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto pt-2">
+                    <input
+                      type="email"
+                      placeholder="sähköposti@esimerkki.fi"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-[#1E3A8A] transition"
+                    />
+                    <button
+                      onClick={sendEmail}
+                      disabled={isSending}
+                      className="bg-[#1E3A8A] hover:bg-[#172554] disabled:opacity-50 text-white font-bold px-6 py-3 rounded-xl transition shadow-sm cursor-pointer"
+                    >
+                      {isSending ? "Lähetetään..." : "Lähetä raportti"}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </main>
+  );
+}
