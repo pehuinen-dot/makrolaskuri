@@ -92,7 +92,7 @@ export default function Home() {
       });
     }
 
-    const calculatedMeals = generateMealPlan(diet);
+    const calculatedMeals = generateDynamicMealPlan(diet, targetCalories, numWeight);
 
     setMeals(calculatedMeals);
     setResults({
@@ -109,14 +109,23 @@ export default function Home() {
     });
   };
 
-  const generateMealPlan = (selectedDiet: string) => {
+  const generateDynamicMealPlan = (selectedDiet: string, calories: number, bodyWeight: number) => {
+    // Skaalauskerroin perustuen kaloritasoon (verrattuna 2000 kcal perusasetukseen)
+    const scale = calories / 2000;
+    
+    // Proteiinin lähteet skaalautuvat kehonpainon / proteiinitarpeen mukaan
+    const meatGrams = Math.round(160 * (bodyWeight / 80));
+    const fishGrams = Math.round(180 * (bodyWeight / 80));
+    const carbSourceGrams = Math.round(75 * scale);
+    const oatsGrams = Math.round(70 * scale);
+
     if (selectedDiet === "vegaani") {
       return {
         breakfast: {
           name: "Kaurapuuro, nyhtökaura & pähkinät",
           ingredients: [
-            "80g kaurahiutaleita",
-            "100g Härkistä tai Nyhtökauraa",
+            `${oatsGrams}g kaurahiutaleita`,
+            `${Math.round(100 * scale)}g Härkistä tai Nyhtökauraa`,
             "150g marjoja",
             "20g saksanpähkinöitä",
           ],
@@ -124,8 +133,8 @@ export default function Home() {
         lunch: {
           name: "Tofu-riisikulho & vihannekset",
           ingredients: [
-            "180g kiinteää tofua marinoituna",
-            "80g tummaa riisiä (kuivapaino)",
+            `${Math.round(170 * scale)}g kiinteää tofua marinoituna`,
+            `${carbSourceGrams}g tummaa riisiä (kuivapaino)`,
             "150g parsakaalia ja porkkanaa",
             "1 rkl oliiviöljyä paistamiseen",
           ],
@@ -133,8 +142,8 @@ export default function Home() {
         dinner: {
           name: "Linssi-kasviskastike & täysjyväpasta",
           ingredients: [
-            "150g punaisia linssejä",
-            "80g täysjyväpastaa",
+            `${Math.round(130 * scale)}g punaisia linssejä`,
+            `${carbSourceGrams}g täysjyväpastaa`,
             "200g tomaattimurskaa ja kasviksia",
             "1 rkl ravintohiivahiutaleita",
           ],
@@ -155,8 +164,8 @@ export default function Home() {
         breakfast: {
           name: "Kreikkalainen jogurtti, mysli & marjat",
           ingredients: [
-            "250g kreikkalaista jogurttia",
-            "40g täysjyvämysliä",
+            `${Math.round(250 * scale)}g kreikkalaista jogurttia`,
+            `${Math.round(45 * scale)}g täysjyvämysliä`,
             "100g vadelmia tai mansikoita",
             "1 rkl hunajaa",
           ],
@@ -164,8 +173,8 @@ export default function Home() {
         lunch: {
           name: "Halloumi-kvinoasalaatti",
           ingredients: [
-            "140g halloumijuustoa paistettuna",
-            "75g kvinoaa (kuivapaino)",
+            `${Math.round(130 * scale)}g halloumijuustoa paistettuna`,
+            `${carbSourceGrams}g kvinoaa (kuivapaino)`,
             "Tuorekurkkua, tomaattia ja salaattisekoitusta",
             "1 rkl oliiviöljy-sitruunakastiketta",
           ],
@@ -173,8 +182,8 @@ export default function Home() {
         dinner: {
           name: "Pinaatti-fetapasta",
           ingredients: [
-            "80g täysjyväpastaa",
-            "100g fetajuustoa murusteltuna",
+            `${carbSourceGrams}g täysjyväpastaa`,
+            `${Math.round(90 * scale)}g fetajuustoa murusteltuna`,
             "100g tuoretta pinaattia",
             "Kirsikkatomaatteja ja valkosipulia",
           ],
@@ -182,7 +191,7 @@ export default function Home() {
         snack: {
           name: "Raejuustoa & hedelmiä",
           ingredients: [
-            "200g raejuustoa",
+            `${Math.round(200 * scale)}g raejuustoa`,
             "1 pilkottu omena tai päärynä",
             "Ripaus kanelia ja muutama manteli",
           ],
@@ -195,8 +204,8 @@ export default function Home() {
         breakfast: {
           name: "Muna-pekoniaamiainen & avokado",
           ingredients: [
-            "3 paistettua kananmunaa",
-            "60g pekonia rapeaksi paistettuna",
+            `${Math.round(3 * scale >= 3 ? 3 : 2)} paistettua kananmunaa`,
+            `${Math.round(60 * scale)}g pekonia rapeaksi paistettuna`,
             "1 kokonainen avokado viipaloituna",
             "Kourallinen tuoretta pinaattia",
           ],
@@ -204,8 +213,8 @@ export default function Home() {
         lunch: {
           name: "Kana-fetavuohenjuustosalaatti öljyllä",
           ingredients: [
-            "180g broilerin rintafileetä",
-            "50g fetajuustoa tai vuohenjuustoa",
+            `${meatGrams}g broilerin rintafileetä`,
+            `${Math.round(50 * scale)}g fetajuustoa tai vuohenjuustoa`,
             "Iso salaattipohja (salaattia, kurkkua)",
             "3 rkl laadukasta oliiviöljyä tai MCT-öljyä",
           ],
@@ -213,7 +222,7 @@ export default function Home() {
         dinner: {
           name: "Rasvainen lohifilee & parsakaalia",
           ingredients: [
-            "200g merilohta uunissa",
+            `${fishGrams}g merilohta uunissa`,
             "150g parsakaalia voissa paistettuna",
             "Kastike: 50g ranskankermaa (crème fraîche) & tilliä",
           ],
@@ -221,7 +230,7 @@ export default function Home() {
         snack: {
           name: "Avokado-rahkamousse tai pähkinät",
           ingredients: [
-            "150g täysrasvaista rahkaa",
+            `${Math.round(150 * scale)}g täysrasvaista rahkaa`,
             "30g makadamiapähkinöitä",
             "Tilkka kuohukermaa",
           ],
@@ -234,7 +243,7 @@ export default function Home() {
         breakfast: {
           name: "Gluteeniton puuro & marjat",
           ingredients: [
-            "80g gluteenittomia kaurahiutaleita",
+            `${oatsGrams}g gluteenittomia kaurahiutaleita`,
             "30g heraproteiinia (tai 150g raejuustoa)",
             "100g marjoja",
             "15g siemeniä",
@@ -243,8 +252,8 @@ export default function Home() {
         lunch: {
           name: "Kana-riisikulho & kasvikset",
           ingredients: [
-            "180g broilerin rintafileetä",
-            "75g riisiä tai kvinoaa",
+            `${meatGrams}g broilerin rintafileetä`,
+            `${carbSourceGrams}g riisiä tai kvinoaa`,
             "150g höyrytettyjä kasviksia",
             "10g oliiviöljyä",
           ],
@@ -252,15 +261,15 @@ export default function Home() {
         dinner: {
           name: "Naudanliha-perunamuusi",
           ingredients: [
-            "180g naudan paistijauhelihaa (10%)",
-            "250g perunoita muusiksi tehtynä",
+            `${meatGrams}g naudan paistijauhelihaa (10%)`,
+            `${Math.round(250 * scale)}g perunoita muusiksi tehtynä`,
             "Tuoretta salaattia",
           ],
         },
         snack: {
           name: "Gluteeniton välipala",
           ingredients: [
-            "250g maitorahkaa",
+            `${Math.round(250 * scale)}g maitorahkaa`,
             "1 banaani",
             "Kourallinen saksanpähkinöitä",
           ],
@@ -273,7 +282,7 @@ export default function Home() {
       breakfast: {
         name: "Kaurapuuro & heraproteiini / raejuusto",
         ingredients: [
-          "80g kaurahiutaleita",
+          `${oatsGrams}g kaurahiutaleita`,
           "30g heraproteiinia (tai 150g raejuustoa)",
           "100g pakastemarjoja",
           "15g pähkinöitä / siemeniä",
@@ -282,8 +291,8 @@ export default function Home() {
       lunch: {
         name: "Kana-riisikulho & kasvikset",
         ingredients: [
-          "180g broilerin rintafileetä",
-          "75g tummaa riisiä (kuivapaino)",
+          `${meatGrams}g broilerin rintafileetä`,
+          `${carbSourceGrams}g tummaa riisiä (kuivapaino)`,
           "150g höyrytettyjä kasviksia",
           "10g oliiviöljyä tai pähkinäöljyä",
         ],
@@ -291,8 +300,8 @@ export default function Home() {
       dinner: {
         name: "Jauhelihakastike & perunat",
         ingredients: [
-          "180g naudan jauhelihaa (10%)",
-          "250g kuorittuja perunoita",
+          `${meatGrams}g naudan jauhelihaa (10%)`,
+          `${Math.round(250 * scale)}g kuorittuja perunoita`,
           "Runsaasti tuoresalaattia & kurkkua",
           "1 rkl salaatinkastiketta",
         ],
@@ -300,7 +309,7 @@ export default function Home() {
       snack: {
         name: "Rahka / Raejuusto & ruisleipä",
         ingredients: [
-          "250g rasvatonta maitorahkaa tai raejuustoa",
+          `${Math.round(250 * scale)}g rasvatonta maitorahkaa tai raejuustoa`,
           "100g marjoja tai 1 omena",
           "2 viipaletta ruisleipää + sipaisu levitettä & leikkeleitä",
         ],
@@ -437,191 +446,4 @@ export default function Home() {
               <select
                 value={activity}
                 onChange={(e) => setActivity(Number(e.target.value))}
-                className="w-full bg-[#FAF9F6] border border-slate-200 rounded-xl p-3 text-slate-900 focus:outline-none focus:border-[#1E3A8A] transition"
-              >
-                <option value={1.2}>Kevyt (Iskutyö / vähän liikuntaa)</option>
-                <option value={1.375}>Kevyt liikunta (1-3 krt/vko)</option>
-                <option value={1.55}>Kohtalainen liikunta (3-5 krt/vko)</option>
-                <option value={1.725}>Aktiivinen urheilu (6-7 krt/vko)</option>
-                <option value={1.9}>Erittäin aktiivinen / fyysinen työ</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Ruokavalio */}
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Ruokavalion tyyppi
-              </label>
-              <select
-                value={diet}
-                onChange={(e) => setDiet(e.target.value)}
-                className="w-full bg-[#FAF9F6] border border-slate-200 rounded-xl p-3 text-slate-900 focus:outline-none focus:border-[#1E3A8A] transition"
-              >
-                <option value="sekasyöjä">Sekasyöjä</option>
-                <option value="kasvis">Kasvisruokavalio</option>
-                <option value="vegaani">Vegaani</option>
-                <option value="keto">Keto (Ketogeeninen)</option>
-                <option value="gluteeniton">Gluteeniton</option>
-              </select>
-            </div>
-
-            {/* Tavoite / Kalorivaje */}
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Tavoite
-              </label>
-              <select
-                value={goalPreset}
-                onChange={(e) => setGoalPreset(e.target.value)}
-                className="w-full bg-[#FAF9F6] border border-slate-200 rounded-xl p-3 text-slate-900 focus:outline-none focus:border-[#1E3A8A] transition"
-              >
-                <option value="-500">Rasvanpoltto (-500 kcal/pvä)</option>
-                <option value="-300">Maltillinen laihtuminen (-300 kcal/pvä)</option>
-                <option value="0">Painon ylläpito (0 kcal)</option>
-                <option value="300">Maltillinen lihaskasvu (+300 kcal/pvä)</option>
-                <option value="custom">Muu mukautettu muutos</option>
-              </select>
-            </div>
-          </div>
-
-          {goalPreset === "custom" && (
-            <div className="space-y-1 transition-all duration-200">
-              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Mukautettu kalorimuutos (kcal/pvä, esim. -400 tai +200)
-              </label>
-              <input
-                type="number"
-                value={customDeficit}
-                onChange={(e) => setCustomDeficit(Number(e.target.value))}
-                className="w-full bg-[#FAF9F6] border border-slate-200 rounded-xl p-3 text-slate-900 focus:outline-none focus:border-[#1E3A8A] transition"
-              />
-            </div>
-          )}
-
-          <button
-            onClick={calculateMacros}
-            className="w-full bg-[#1E3A8A] hover:bg-[#172554] text-white font-bold py-4 rounded-xl shadow-md transition transform active:scale-95 text-lg mt-4 cursor-pointer"
-          >
-            Laske makrot & näytä ruokavalio
-          </button>
-        </div>
-
-        {/* Tulokset & Ruokavalio */}
-        {results && (
-          <div className="space-y-8 transition-all duration-300 ease-in-out opacity-100 transform translate-y-0">
-            {/* Kortti: Tulokset */}
-            <div className="bg-white border border-slate-200 p-6 sm:p-8 rounded-3xl shadow-sm space-y-6">
-              <h2 className="text-xl font-bold text-[#1E3A8A] border-b border-slate-100 pb-3">
-                2. Henkilökohtaiset tuloksesi
-              </h2>
-
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 text-center">
-                {/* Tavoitekalorit */}
-                <div className="bg-[#FAF9F6] p-4 rounded-2xl border border-slate-200/60">
-                  <div className="text-xs text-slate-500 font-semibold uppercase">Tavoitekalorit</div>
-                  <div className="text-2xl font-black text-[#1E3A8A] mt-1">{results.targetCalories}</div>
-                  <div className="text-xs text-slate-400">kcal / pvä</div>
-                </div>
-
-                {/* Proteiini */}
-                <div className="bg-[#FAF9F6] p-4 rounded-2xl border border-slate-200/60">
-                  <div className="text-xs text-slate-500 font-semibold uppercase">Proteiini</div>
-                  <div className="text-2xl font-black text-[#C2410C] mt-1">{results.proteinGrams}g</div>
-                  <div className="text-xs text-slate-400">({Math.round(results.proteinGrams * 4)} kcal)</div>
-                </div>
-
-                {/* Rasva */}
-                <div className="bg-[#FAF9F6] p-4 rounded-2xl border border-slate-200/60">
-                  <div className="text-xs text-slate-500 font-semibold uppercase">Rasva</div>
-                  <div className="text-2xl font-black text-[#B45309] mt-1">{results.fatGrams}g</div>
-                  <div className="text-xs text-slate-400">({Math.round(results.fatGrams * 9)} kcal)</div>
-                </div>
-
-                {/* Hiilihydraatti */}
-                <div className="bg-[#FAF9F6] p-4 rounded-2xl border border-slate-200/60">
-                  <div className="text-xs text-slate-500 font-semibold uppercase">Hiilihydraatti</div>
-                  <div className="text-2xl font-black text-[#15803D] mt-1">{results.carbGrams}g</div>
-                  <div className="text-xs text-slate-400">({Math.round(results.carbGrams * 4)} kcal)</div>
-                </div>
-
-                {/* Kuidut */}
-                <div className="bg-[#FAF9F6] p-4 rounded-2xl border border-slate-200/60 col-span-2 sm:col-span-1">
-                  <div className="text-xs text-slate-500 font-semibold uppercase">Kuidut (min)</div>
-                  <div className="text-2xl font-black text-[#6B21A8] mt-1">{results.fiberGrams}g</div>
-                  <div className="text-xs text-slate-400">suositus</div>
-                </div>
-              </div>
-
-              {results.weeksToGoal > 0 && (
-                <div className="bg-blue-50/70 border border-blue-200 p-4 rounded-2xl text-center space-y-1">
-                  <span className="text-[#1E3A8A] font-bold text-sm">Painoennuste tavoitteeseen ({results.targetWeight} kg):</span>
-                  <p className="text-slate-700 text-sm">
-                    Saavutat tavoitteesi noin <strong>{results.weeksToGoal} viikossa</strong> ({results.targetDateStr} mennessä).
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Kortti: Ateriaehdotus */}
-            <div className="bg-white border border-slate-200 p-6 sm:p-8 rounded-3xl shadow-sm space-y-6">
-              <h2 className="text-xl font-bold text-[#1E3A8A] border-b border-slate-100 pb-3">
-                Ehdotus 1 päivän aterioista
-              </h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {Object.entries(meals).map(([key, meal]: [string, Meal]) => (
-                  <div key={key} className="bg-[#FAF9F6] p-5 rounded-2xl border border-slate-200/60 space-y-2">
-                    <span className="text-sm font-black tracking-wider uppercase text-[#1E3A8A]">
-                      {key === "breakfast" ? "Aamupala" : key === "lunch" ? "Lounas" : key === "dinner" ? "Päivällinen" : "Iltapala / Välipala"}
-                    </span>
-                    <h3 className="font-bold text-slate-900">{meal.name}</h3>
-                    <ul className="text-xs text-slate-600 space-y-1 list-disc list-inside">
-                      {meal.ingredients.map((ing, i) => (
-                        <li key={i}>{ing}</li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-
-              {/* Sähköpostin lähetysosio */}
-              <div className="bg-[#FAF9F6] p-6 sm:p-8 rounded-3xl border border-slate-200/80 mt-8 text-center space-y-4">
-                <h3 className="text-xl font-bold text-slate-900">
-                  Lähetä makrosuunnitelma sähköpostiisi
-                </h3>
-                <p className="text-slate-600 text-sm max-w-md mx-auto">
-                  Syötä sähköpostiosoitteesi alle, niin lähetämme henkilökohtaisen raporttisi ja 1 päivän ruokavalion suoraan laatikkoosi.
-                </p>
-
-                {emailSent ? (
-                  <div className="bg-emerald-50 border border-emerald-300 text-emerald-800 p-4 rounded-2xl font-semibold text-sm">
-                    Suunnitelma lähetetty! Tarkista sähköpostisi (myös roskapostikansio).
-                  </div>
-                ) : (
-                  <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto pt-2">
-                    <input
-                      type="email"
-                      placeholder="sähköposti@esimerkki.fi"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-[#1E3A8A] transition"
-                    />
-                    <button
-                      onClick={sendEmail}
-                      disabled={isSending}
-                      className="bg-[#1E3A8A] hover:bg-[#172554] disabled:opacity-50 text-white font-bold px-6 py-3 rounded-xl transition shadow-sm cursor-pointer"
-                    >
-                      {isSending ? "Lähetetään..." : "Lähetä raportti"}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </main>
-  );
-}
+                className="w-full bg-[#FAF9F6] border border-slate-200 rounded-xl p-3 text-slate-
