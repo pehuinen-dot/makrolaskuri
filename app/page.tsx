@@ -577,3 +577,34 @@ export default function Home() {
                 <p className="text-stone-600 text-sm max-w-md mx-auto">
                   Syötä sähköpostiosoitteesi alle, niin lähetämme henkilökohtaisen raporttisi ja 1 päivän ruokavalion suoraan laatikkoosi.
                 </p>
+
+                {emailSent ? (
+                  <div className="bg-emerald-50 border border-emerald-300 text-emerald-800 p-4 rounded-2xl font-semibold text-sm">
+                    Suunnitelma lähetetty! Tarkista sähköpostisi (myös roskapostikansio).
+                  </div>
+                ) : (
+                  <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto pt-2">
+                    <input
+                      type="email"
+                      placeholder="sähköposti@esimerkki.fi"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="flex-1 bg-white border border-stone-300 rounded-xl px-4 py-3 text-stone-800 focus:outline-none focus:border-amber-700"
+                    />
+                    <button
+                      onClick={sendEmail}
+                      disabled={isSending}
+                      className="bg-amber-800 hover:bg-amber-950 disabled:opacity-50 text-white font-bold px-6 py-3 rounded-xl transition shadow-sm"
+                    >
+                      {isSending ? "Lähetetään..." : "Lähetä raportti"}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </main>
+  );
+}
